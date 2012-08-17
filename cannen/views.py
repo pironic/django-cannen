@@ -48,11 +48,11 @@ def info(request):
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
 
     songfiles = SongFile.objects.filter(owner=request.user)
-    userlibrary = [CANNEN_BACKEND.get_info(Song,True) for Song in songfiles]
-    userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
+    userLibrary = [CANNEN_BACKEND.get_info(Song,True) for Song in songfiles]
+    userLibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
 
 
-    data = dict(current=now_playing, playlist=playlist, queue=userqueue, library=userlibrary)
+    data = dict(current=now_playing, playlist=playlist, queue=userqueue, userLibrary=userLibrary)
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
 
