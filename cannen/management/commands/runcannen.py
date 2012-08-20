@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.core.management.base import BaseCommand, CommandError
-from cannen.models import UserSong, GlobalSong, User
+from cannen.models import UserSong, GlobalSong, SongFile, User
 import cannen.backend
 
 class PlaylistManager(object):
@@ -46,10 +46,10 @@ class PlaylistManager(object):
                 global_to_add = GlobalSong.from_user_song(to_add)
                 global_to_add.save()
                 to_add.delete()
-                
+                                
         # add some now
         add_queued()
-        
+                
         # update current is_playing if there is no current
         if not now_playing:
             # start mpd going with our queue
@@ -60,8 +60,13 @@ class PlaylistManager(object):
                     return # try again with other things
                 self.backend.play()
             except IndexError:
-                # nothing to play :(
-                pass
+                # nothing to play :( PICK A RANDOM ONE! party time! puff puff --
+                #pass
+                try:
+                    global_to_add = GlobalSong.from_song_file(SongFile.objects.order_by('?')[0])
+                    global_to_add.save()
+                except IndexError:
+                    pass
             # our queue + play call will result in another call to
             # on_next_song, so we'll resume there
             return

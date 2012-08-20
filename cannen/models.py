@@ -76,7 +76,7 @@ class Orderable(models.Model):
             if not self.move_up():
                 return
             dest += 1
-
+			
 # model for files uploaded
 class SongFile(models.Model):
     owner = models.ForeignKey(User)
@@ -152,7 +152,10 @@ class GlobalSong(models.Model):
     @classmethod
     def from_user_song(cls, user):
         return cls(submitter=user.owner, url=user.url, file=user.file, is_playing=False)
-
+    @classmethod
+    def from_song_file(cls, user):
+        return cls(submitter=user.owner, url=user.url, file=user, is_playing=False)
+        
 @receiver(post_delete, sender=GlobalSong)
 def global_song_delete(sender, **kwargs):
     instance = kwargs['instance']
