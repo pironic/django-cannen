@@ -130,6 +130,15 @@ settings file. To get the most out of your Library experience, you'll
 likely want to disable the garbage collector as well, as listed
 directly above.
 
+#### CANNEN_SHUFFLE_ENABLE & CANNEN_SHUFFLE_USER_ID 
+
+By default if no music is playing it will sit idle, but when 
+`CANNEN_SHUFFLE_ENABLE` is set to True, it will pick a random song 
+from the enabled library and play a song by the person who submitted it 
+originally. Alternatively you can set the user to a specific user by 
+id from the User table by setting the `CANNEN_SHUFFLE_USER_ID` to the 
+id of the user that should be marked as queuing the Randomly selected songs.
+
 #### CANNEN_UPLOAD_DIR
 
 If you want to store your uploaded songs somewhere other than

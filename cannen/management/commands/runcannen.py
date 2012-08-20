@@ -15,6 +15,7 @@
 
 from django.core.management.base import BaseCommand, CommandError
 from cannen.models import UserSong, GlobalSong, SongFile, User
+from django.conf import settings
 import cannen.backend
 
 class PlaylistManager(object):
@@ -60,12 +61,14 @@ class PlaylistManager(object):
                     return # try again with other things
                 self.backend.play()
             except IndexError:
-                # nothing to play :( PICK A RANDOM ONE! party time! puff puff --
-                #pass
-                try:
-                    global_to_add = GlobalSong.from_song_file(SongFile.objects.order_by('?')[0])
-                    global_to_add.save()
-                except IndexError:
+                # nothing to play :( PICK A RANDOM ONE! party time!
+                if getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False):
+                    try:
+                        global_to_add = GlobalSong.from_song_file(SongFile.objects.order_by('?')[0])
+                        global_to_add.save()
+                    except IndexError:
+                        pass
+                else:
                     pass
             # our queue + play call will result in another call to
             # on_next_song, so we'll resume there
