@@ -150,12 +150,14 @@ class GlobalSong(models.Model):
         return self.url.rsplit('/')[-1]
     
     @classmethod
-    def from_user_song(cls, user):
-        return cls(submitter=user.owner, url=user.url, file=user.file, is_playing=False)
     def from_song_file(cls, song):
         user_id = getattr(settings, 'CANNEN_SHUFFLE_USER_ID', song.owner.id)
         shuffle_user = User.objects.get(id=user_id)
         return cls(submitter=shuffle_user, url=song.url, file=song, is_playing=False)
+        
+    @classmethod
+    def from_user_song(cls, user):
+        return cls(submitter=user.owner, url=user.url, file=user.file, is_playing=False)
         
 @receiver(post_delete, sender=GlobalSong)
 def global_song_delete(sender, **kwargs):

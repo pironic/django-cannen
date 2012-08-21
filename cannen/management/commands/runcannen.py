@@ -64,7 +64,8 @@ class PlaylistManager(object):
                 # nothing to play :( PICK A RANDOM ONE! party time!
                 if getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False):
                     try:
-                        global_to_add = GlobalSong.from_song_file(SongFile.objects.order_by('?')[0])
+                        randomSong = SongFile.objects.order_by('?')[0]
+                        global_to_add = GlobalSong.from_song_file(randomSong)
                         global_to_add.save()
                     except IndexError:
                         pass
