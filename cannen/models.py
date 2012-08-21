@@ -152,7 +152,6 @@ class GlobalSong(models.Model):
     @classmethod
     def from_user_song(cls, user):
         return cls(submitter=user.owner, url=user.url, file=user.file, is_playing=False)
-    @classmethod
     def from_song_file(cls, song):
         user_id = getattr(settings, 'CANNEN_SHUFFLE_USER_ID', song.owner.id)
         shuffle_user = User.objects.get(id=user_id)
