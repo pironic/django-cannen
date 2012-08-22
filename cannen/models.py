@@ -164,3 +164,24 @@ def global_song_delete(sender, **kwargs):
     instance = kwargs['instance']
     if instance.file:
         instance.file.garbage_collect()
+        
+class SongVote(models.Model):
+    voter = models.ForeignKey(User)
+    subject = models.ForeignKey(GlobalSong)
+    vote = models.IntegerField(blank=True, null=False)
+    
+    def __str__(self):  
+        return "a vote by %s" % self.voter
+    
+class UserProfile(models.Model):
+    user = models.OneToOneField(User)
+    coins = models.IntegerField(blank=True, null=False)
+    
+    def __str__(self):  
+        return "%s's profile" % self.user  
+
+    def create_user_profile(sender, instance, created, **kwargs):  
+        if created:  
+           profile, created = UserProfile.objects.get_or_create(user=instance)  
+
+    post_save.connect(create_user_profile, sender=User) 

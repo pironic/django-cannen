@@ -123,3 +123,8 @@ def play(request, url):
         raise ValidationError("invalid track")
     UserSong(owner=request.user, url=url).save()
     return HttpResponseRedirect(reverse('cannen.views.index'))
+    
+@login_required
+def vote(request):
+    action = request.POST['action']
+    return HttpResponseRedirect(reverse('cannen.views.index'))

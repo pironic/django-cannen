@@ -2,8 +2,14 @@
 <div class="row">
   <div class="span12">
 	<!-- now playing -->
+
     <div class="hero-unit" id="current">
       {% if current %}
+      <form id="vote" action="{% url 'cannen.views.vote' %}" method="post" enctype="multipart/form-data" class="form-inline pull-right">
+        <input id="songid" type="hidden" value="{{ current.id }}"/>
+        <input id="+" type="submit" class="btn" value="LIKE"/> <i class="icon-headphones icon-upvote"></i>
+        <input id="-" type="submit" class="btn" value="DOWN"/> <i class="icon-headphones icon-upvote"></i>
+      </form>      
       <div class="title">
         {{ current.title }}
       </div>
