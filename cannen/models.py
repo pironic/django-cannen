@@ -171,9 +171,20 @@ class SongVote(models.Model):
     
     def __str__(self):  
         return "a vote by %s" % self.voter
+        
+class SongFileScore(models.Model): #extend the SongFile model to track its score
+    song = models.OneToOneField(SongFile)
+    score = models.IntegerField(blank=True, null=True)
     
-    # score = models.decimalfield(blank=true, null=true, max_digits=4, decimal_places=2)
-    # votes = models.IntegerField(blank=True, null=True)
+    def __str__(self):  
+        return "voting sums for " % self.song
+        
+    def create_song_vote_profile(sender, instance, created, **kwargs):  
+        if created:  
+           profile, created = SongFileScore.objects.get_or_create(song=instance)  
+
+    post_save.connect(create_song_vote_profile, sender=SongFile) 
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)

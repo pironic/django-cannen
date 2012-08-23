@@ -22,7 +22,7 @@ from django.template import RequestContext
 from django.conf import settings
 
 import backend
-from .models import UserSong, GlobalSong, SongFile, SongVote, add_song_and_file
+from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, SongVote, add_song_and_file
 
 @login_required
 def index(request):
@@ -50,9 +50,16 @@ def info(request):
     
     #populate the values needed to display voting information
     votes = SongVote.objects.filter(subject=now_playing.model.id)
-    voteSelf = SongVote.objects.filter(subject=now_playing.model.id,voter=request.user)
-    voteTotal = SongVote.objects.all()
-
+    voteTotal = 0
+    for vote in votes:
+        voteTotal = voteTotal + vote.vote
+        
+    #populate the self vote info, in order to show the proper voting icons.
+    try:
+        voteSelf = SongVote.objects.filter(subject=now_playing.model.id,voter=request.user)[0]
+    except IndexError:
+        voteSelf = 0
+              
     #return the default values without library
     data = dict(current=now_playing, playlist=playlist, queue=userqueue, voteSelf=voteSelf, voteTotal=voteTotal, enable_library=enable_library)
     
@@ -131,13 +138,48 @@ def play(request, url):
     
 @login_required
 def vote(request, action, songid):
+    #data validation, even though this would liekly never ever be called.
     if action == '':
         action = request.GET['action']
     if songid == '':
         songid = request.GET['songid']
         
-    existingVote = SongVote.objects.filter(subject=songid, voter=request.user)
-    # if (len(existingVote) > 1)
+    removeVote = False #an internal variable to determine if we're adding or removing a vote
+        
+    #gonna need to have this to insert into new and existing records
+    globalSong = GlobalSong.objects.get(id=songid)
     
-    raise ValidationError("Not built yet! hold your horses... ")
+    existingVote = SongVote.objects.filter(subject=songid, voter=request.user)
+    
+    if globalSong.submitter == request.user:
+        raise ValidationError("cannot vote on the tracks you queue.")
+    
+    if len(existingVote) > 0:
+        thisSongVote = existingVote[0]
+     
+        if thisSongVote.vote == 1: #previously voted up
+            if action == '+':
+                removeVote = True
+                action = 1 # already voted up, toggle... to support unvoting
+            else:
+                action = -1 #change the vote to down
+        else: #previously voted down
+            if action == '+':
+                action = 1  #change the vote to up
+            else:
+                removeVote = True
+                action = -1 # already voted up, toggle... to support unvoting
+
+        thisSongVote.vote = action
+    else: # they havn't voted yet, lets make a new vote
+        if action == '+':
+            #this is voting the globalSong (to prevent double voting per play)
+            thisSongVote = SongVote(voter=request.user, subject=globalSong, vote=1) 
+        else:
+            thisSongVote = SongVote(voter=request.user, subject=globalSong, vote=-1)
+
+    if not(removeVote):
+        thisSongVote.save()
+    else:
+        thisSongVote.delete()
     return HttpResponseRedirect(reverse('cannen.views.index'))

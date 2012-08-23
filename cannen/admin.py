@@ -2,6 +2,7 @@ from models import SongFile
 from models import UserSong
 from models import GlobalSong
 from models import SongVote
+from models import SongFileScore
 from models import UserProfile
 from django.contrib import admin
 
@@ -21,4 +22,5 @@ admin.site.register(SongVote, SongVoteAdmin)
 class UserAdmin(admin.ModelAdmin):
     fields = ['user', 'coins']
 
+admin.site.register(SongFileScore)
 admin.site.register(UserProfile)
