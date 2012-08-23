@@ -98,8 +98,7 @@ class SongFile(models.Model):
         self.delete()
 
     def __unicode__(self):
-        return self.file.url.rsplit('/')[-1]
-
+        return self.file.url.rsplit('/')[-1].replace('_',' ').replace('.mp3',' [invalid id3]').replace('.mov',' [invalid id3]')
 
 @receiver(post_save, sender=SongFile)
 def register_uploaded(sender, **kwargs):
@@ -147,7 +146,7 @@ class GlobalSong(models.Model):
         ordering = ['id']
     
     def __unicode__(self):
-        return self.url.rsplit('/')[-1]
+        return self.url.rsplit('/')[-1].replace('_',' ').replace('.mp3',' [invalid id3]').replace('.mov',' [invalid id3]')
     
     @classmethod
     def from_song_file(cls, song):
@@ -168,11 +167,14 @@ def global_song_delete(sender, **kwargs):
 class SongVote(models.Model):
     voter = models.ForeignKey(User)
     subject = models.ForeignKey(GlobalSong)
-    vote = models.IntegerField(blank=True, null=False)
+    vote = models.IntegerField(blank=False, null=False)
     
     def __str__(self):  
         return "a vote by %s" % self.voter
     
+    # score = models.decimalfield(blank=true, null=true, max_digits=4, decimal_places=2)
+    # votes = models.IntegerField(blank=True, null=True)
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     coins = models.IntegerField(blank=True, null=False)

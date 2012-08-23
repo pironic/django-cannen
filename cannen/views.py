@@ -22,7 +22,7 @@ from django.template import RequestContext
 from django.conf import settings
 
 import backend
-from .models import UserSong, GlobalSong, SongFile, add_song_and_file
+from .models import UserSong, GlobalSong, SongFile, SongVote, add_song_and_file
 
 @login_required
 def index(request):
@@ -47,16 +47,21 @@ def info(request):
 
     userqueue = UserSong.objects.filter(owner=request.user)
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
+    
+    #populate the values needed to display voting information
+    votes = SongVote.objects.filter(subject=now_playing.model.id)
+    voteSelf = SongVote.objects.filter(subject=now_playing.model.id,voter=request.user)
+    voteTotal = SongVote.objects.all()
 
     #return the default values without library
-    data = dict(current=now_playing, playlist=playlist, queue=userqueue, enable_library=enable_library)
+    data = dict(current=now_playing, playlist=playlist, queue=userqueue, voteSelf=voteSelf, voteTotal=voteTotal, enable_library=enable_library)
     
     #if the library is enabled, then prepare the data and pass it to the template
     if enable_library:
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, library=userlibrary, enable_library=enable_library)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, voteSelf=voteSelf, voteTotal=voteTotal, library=userlibrary, enable_library=enable_library)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -125,6 +130,14 @@ def play(request, url):
     return HttpResponseRedirect(reverse('cannen.views.index'))
     
 @login_required
-def vote(request):
-    action = request.POST['action']
+def vote(request, action, songid):
+    if action == '':
+        action = request.GET['action']
+    if songid == '':
+        songid = request.GET['songid']
+        
+    existingVote = SongVote.objects.filter(subject=songid, voter=request.user)
+    # if (len(existingVote) > 1)
+    
+    raise ValidationError("Not built yet! hold your horses... ")
     return HttpResponseRedirect(reverse('cannen.views.index'))
