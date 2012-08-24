@@ -20,9 +20,10 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.template import RequestContext
 from django.conf import settings
+from django.db.models import F # https://docs.djangoproject.com/en/dev/ref/models/instances/?from=olddocs#how-django-knows-to-update-vs-insert
 
 import backend
-from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, Songrate, add_song_and_file
+from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file
 
 @login_required
 def index(request):
@@ -47,28 +48,30 @@ def info(request):
 
     userqueue = UserSong.objects.filter(owner=request.user)
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
-    
-    #populate the values needed to display voting information
-    rates = Songrate.objects.filter(subject=now_playing.model.id)
-    rateTotal = 0
-    for rate in rates:
-        rateTotal = rateTotal + rate.rate
         
-    #populate the self rate info, in order to show the proper voting icons.
+    #populate the self rate info, in order to show the proper rating icons.
     try:
-        rateSelf = Songrate.objects.filter(subject=now_playing.model.id,rater=request.user)[0]
+        rateSelf = GlobalSongRate.objects.filter(subject=now_playing.model.id,rater=request.user)[0]
     except IndexError:
         rateSelf = 0
-              
+
+    #try to load the history for the currently playing song...
+    try:
+        globalSong = GlobalSong.objects.filter(is_playing=True)[0]
+        songScore = SongFileScore.objects.filter(song=globalSong.file)[0]
+    except:
+        #the song doesn't have a history, lets make a new one.
+        songScore = SongFileScore(song=globalSong.file)
+        
     #return the default values without library
-    data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, rateTotal=rateTotal, enable_library=enable_library)
+    data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library)
     
     #if the library is enabled, then prepare the data and pass it to the template
     if enable_library:
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, rateTotal=rateTotal, library=userlibrary, enable_library=enable_library)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -144,60 +147,57 @@ def rate(request, action, songid):
     if songid == '':
         songid = request.GET['songid']
         
-    removerate = False #an internal variable to determine if we're adding or removing a rate
+    removeRate = False #an internal variable to determine if we're adding or removing a rate
         
     #gonna need to have this to insert into new and existing records
+    globalRate = GlobalSongRate.objects.filter(subject=songid, rater=request.user)
     globalSong = GlobalSong.objects.get(id=songid)
-    
-    existingrate = Songrate.objects.filter(subject=songid, rater=request.user)
     
     if globalSong.submitter == request.user:
         raise ValidationError("Sorry, %s, You cannot rate on the tracks you queued." % request.user)
     
-    #load the history for the currently playing song... gonna have to update it
+    #try to load the history for the currently playing song...
     try:
-        #the song already has a history, so we'll need to update it.
-        nowPlayingSongFileScore = SongFileScore.objects.get(song=globalSong.file)[0]
+        songScore = SongFileScore.objects.filter(song=globalSong.file)[0]
     except:
         #the song doesn't have a history, lets make a new one.
-        nowPlayingSongFileScore = SongFileScore(song=globalSong.file, score=0)
+        songScore = SongFileScore(song=globalSong.file)
+    # raise ValidationError("debug value = %s" % songScore.score)
 
-    if len(existingrate) > 0:
-        thisSongrate = existingrate[0]
+    if len(globalRate) > 0: #have we previously rated this globalSong?
+        nowPlayingRate = globalRate[0]
      
-        if thisSongrate.rate == 1: #previously rated up
-            if action == '+':
-                removerate = True
-                action = 1 # already rated up, toggle... to support unvoting
-                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) + 1
+        if nowPlayingRate.rate == 1: #previously rated up
+            if action == '+': # already rated up, toggle... to support unvoting
+                removeRate = True
+                action = 1
+                songScore.score = int(songScore.score) - 1
             else:
                 action = -1 #change the rate to down
-                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) - 1
+                songScore.score = int(songScore.score) - 2
         else: #previously rated down
             if action == '+':
                 action = 1  #change the rate to up
-                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) + 1
+                songScore.score = int(songScore.score) + 2
             else:
-                removerate = True
+                removeRate = True
                 action = -1 # already rated up, toggle... to support unvoting
-                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) - 1
-
-        thisSongrate.rate = action
+                songScore.score = int(songScore.score) + 1
+        nowPlayingRate.rate = action
     else: # they havn't rated yet, lets make a new rate
-
         if action == '+':
             #this is voting the globalSong (to prevent double voting per play)
-            thisSongrate = Songrate(rater=request.user, subject=globalSong, rate=1) 
+            nowPlayingRate = GlobalSongRate(rater=request.user, subject=globalSong, rate=1) 
             #change the now playing SongFile's score
-            nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) + 1
+            songScore.score = int(songScore.score) + 1
         else:
-            thisSongrate = Songrate(rater=request.user, subject=globalSong, rate=-1)
-            nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) - 1
+            nowPlayingRate = GlobalSongRate(rater=request.user, subject=globalSong, rate=-1)
+            songScore.score = int(songScore.score) - 1
             
     #save the stuff we've updated.
-    nowPlayingSongFileScore.save()
-    if not(removerate):
-        thisSongrate.save()
+    songScore.save()
+    if not(removeRate):
+        nowPlayingRate.save()
     else:
-        thisSongrate.delete()
+        nowPlayingRate.delete()
     return HttpResponseRedirect(reverse('cannen.views.index'))
