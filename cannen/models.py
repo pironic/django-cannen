@@ -164,13 +164,13 @@ def global_song_delete(sender, **kwargs):
     if instance.file:
         instance.file.garbage_collect()
         
-class SongVote(models.Model):
-    voter = models.ForeignKey(User)
+class Songrate(models.Model):
+    rater = models.ForeignKey(User)
     subject = models.ForeignKey(GlobalSong)
-    vote = models.IntegerField(blank=False, null=False)
+    rate = models.IntegerField(blank=False, null=False)
     
     def __str__(self):  
-        return "a vote by %s" % self.voter
+        return "a rate by %s" % self.rater
         
 class SongFileScore(models.Model): #extend the SongFile model to track its score
     song = models.OneToOneField(SongFile)
@@ -178,13 +178,6 @@ class SongFileScore(models.Model): #extend the SongFile model to track its score
     
     def __str__(self):  
         return "voting sums for " % self.song
-        
-    def create_song_vote_profile(sender, instance, created, **kwargs):  
-        if created:  
-           profile, created = SongFileScore.objects.get_or_create(song=instance)  
-
-    post_save.connect(create_song_vote_profile, sender=SongFile) 
-
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)

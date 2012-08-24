@@ -1,7 +1,7 @@
 from models import SongFile
 from models import UserSong
 from models import GlobalSong
-from models import SongVote
+from models import Songrate
 from models import SongFileScore
 from models import UserProfile
 from django.contrib import admin
@@ -14,10 +14,10 @@ admin.site.register(SongFile, SongFileAdmin)
 admin.site.register(UserSong)
 admin.site.register(GlobalSong)
 
-class SongVoteAdmin(admin.ModelAdmin):
-    list_filter = ['subject','voter']
+class SongrateAdmin(admin.ModelAdmin):
+    list_filter = ['subject','rater']
 
-admin.site.register(SongVote, SongVoteAdmin)
+admin.site.register(Songrate, SongrateAdmin)
 
 class UserAdmin(admin.ModelAdmin):
     fields = ['user', 'coins']

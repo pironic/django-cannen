@@ -22,7 +22,7 @@ from django.template import RequestContext
 from django.conf import settings
 
 import backend
-from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, SongVote, add_song_and_file
+from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, Songrate, add_song_and_file
 
 @login_required
 def index(request):
@@ -49,26 +49,26 @@ def info(request):
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
     
     #populate the values needed to display voting information
-    votes = SongVote.objects.filter(subject=now_playing.model.id)
-    voteTotal = 0
-    for vote in votes:
-        voteTotal = voteTotal + vote.vote
+    rates = Songrate.objects.filter(subject=now_playing.model.id)
+    rateTotal = 0
+    for rate in rates:
+        rateTotal = rateTotal + rate.rate
         
-    #populate the self vote info, in order to show the proper voting icons.
+    #populate the self rate info, in order to show the proper voting icons.
     try:
-        voteSelf = SongVote.objects.filter(subject=now_playing.model.id,voter=request.user)[0]
+        rateSelf = Songrate.objects.filter(subject=now_playing.model.id,rater=request.user)[0]
     except IndexError:
-        voteSelf = 0
+        rateSelf = 0
               
     #return the default values without library
-    data = dict(current=now_playing, playlist=playlist, queue=userqueue, voteSelf=voteSelf, voteTotal=voteTotal, enable_library=enable_library)
+    data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, rateTotal=rateTotal, enable_library=enable_library)
     
     #if the library is enabled, then prepare the data and pass it to the template
     if enable_library:
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, voteSelf=voteSelf, voteTotal=voteTotal, library=userlibrary, enable_library=enable_library)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, rateTotal=rateTotal, library=userlibrary, enable_library=enable_library)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -137,49 +137,67 @@ def play(request, url):
     return HttpResponseRedirect(reverse('cannen.views.index'))
     
 @login_required
-def vote(request, action, songid):
+def rate(request, action, songid):
     #data validation, even though this would liekly never ever be called.
     if action == '':
         action = request.GET['action']
     if songid == '':
         songid = request.GET['songid']
         
-    removeVote = False #an internal variable to determine if we're adding or removing a vote
+    removerate = False #an internal variable to determine if we're adding or removing a rate
         
     #gonna need to have this to insert into new and existing records
     globalSong = GlobalSong.objects.get(id=songid)
     
-    existingVote = SongVote.objects.filter(subject=songid, voter=request.user)
+    existingrate = Songrate.objects.filter(subject=songid, rater=request.user)
     
     if globalSong.submitter == request.user:
-        raise ValidationError("cannot vote on the tracks you queue.")
+        raise ValidationError("Sorry, %s, You cannot rate on the tracks you queued." % request.user)
     
-    if len(existingVote) > 0:
-        thisSongVote = existingVote[0]
-     
-        if thisSongVote.vote == 1: #previously voted up
-            if action == '+':
-                removeVote = True
-                action = 1 # already voted up, toggle... to support unvoting
-            else:
-                action = -1 #change the vote to down
-        else: #previously voted down
-            if action == '+':
-                action = 1  #change the vote to up
-            else:
-                removeVote = True
-                action = -1 # already voted up, toggle... to support unvoting
+    #load the history for the currently playing song... gonna have to update it
+    try:
+        #the song already has a history, so we'll need to update it.
+        nowPlayingSongFileScore = SongFileScore.objects.get(song=globalSong.file)[0]
+    except:
+        #the song doesn't have a history, lets make a new one.
+        nowPlayingSongFileScore = SongFileScore(song=globalSong.file, score=0)
 
-        thisSongVote.vote = action
-    else: # they havn't voted yet, lets make a new vote
+    if len(existingrate) > 0:
+        thisSongrate = existingrate[0]
+     
+        if thisSongrate.rate == 1: #previously rated up
+            if action == '+':
+                removerate = True
+                action = 1 # already rated up, toggle... to support unvoting
+                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) + 1
+            else:
+                action = -1 #change the rate to down
+                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) - 1
+        else: #previously rated down
+            if action == '+':
+                action = 1  #change the rate to up
+                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) + 1
+            else:
+                removerate = True
+                action = -1 # already rated up, toggle... to support unvoting
+                nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) - 1
+
+        thisSongrate.rate = action
+    else: # they havn't rated yet, lets make a new rate
+
         if action == '+':
             #this is voting the globalSong (to prevent double voting per play)
-            thisSongVote = SongVote(voter=request.user, subject=globalSong, vote=1) 
+            thisSongrate = Songrate(rater=request.user, subject=globalSong, rate=1) 
+            #change the now playing SongFile's score
+            nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) + 1
         else:
-            thisSongVote = SongVote(voter=request.user, subject=globalSong, vote=-1)
-
-    if not(removeVote):
-        thisSongVote.save()
+            thisSongrate = Songrate(rater=request.user, subject=globalSong, rate=-1)
+            nowPlayingSongFileScore.score = int(nowPlayingSongFileScore.score) - 1
+            
+    #save the stuff we've updated.
+    nowPlayingSongFileScore.save()
+    if not(removerate):
+        thisSongrate.save()
     else:
-        thisSongVote.delete()
+        thisSongrate.delete()
     return HttpResponseRedirect(reverse('cannen.views.index'))

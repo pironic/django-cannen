@@ -130,7 +130,7 @@ body
 	font-weight: bold;
 	font-size: 1.4em;
 }
-.voteBox
+.rateBox
 {
     float:left;
     margin-left:0px;
@@ -139,7 +139,7 @@ body
     vertical-align:middle;
     text-align:center;
 }
-[class^="vote-"],[class*=" vote-"]
+[class^="rate-"],[class*=" rate-"]
 {
     display:inline-block;
     width:32px;
@@ -147,23 +147,23 @@ body
     *margin-right:.3em;
     line-height:32px;
     vertical-align:text-top;
-    background-image:url("../img/vote-sprite.png");
+    background-image:url("../img/rate-sprite.png");
     background-position:0px 0px;
     background-repeat:no-repeat
 }
-.vote-down
+.rate-down
 {
     background-position:-0px
 }
-.vote-up
+.rate-up
 {
     background-position:-32px
 }
-.vote-down-active
+.rate-down-active
 {
     background-position:-64px
 }
-.vote-up-active
+.rate-up-active
 {
     background-position:-96px
 }    

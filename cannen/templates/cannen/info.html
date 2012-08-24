@@ -5,28 +5,28 @@
 
     <div class="hero-unit" id="current">
       {% if current %}
-      <div class="voteBox">
-        <a href="{% url 'cannen.views.vote' '+' current.model.id %}" class="asynclink">
-          {% if voteSelf.vote == 1 %}
-          <i class="vote-up-active"></i>
+      <div class="rateBox">
+        <a href="{% url 'cannen.views.rate' '+' current.model.id %}" class="asynclink">
+          {% if rateSelf.rate == 1 %}
+          <i class="rate-up-active"></i>
           {% else %}
-          <i class="vote-up"></i>
+          <i class="rate-up"></i>
           {% endif %}
         </a>
         </br>
-        <span id="voteTotal">
-          {% if voteTotal %}
-            {{ voteTotal }}
+        <span id="rateTotal">
+          {% if rateTotal %}
+            {{ rateTotal }}
           {% else %}
             0
           {% endif %}
         </span>
         </br>
-        <a href="{% url 'cannen.views.vote' '-' current.model.id %}" class="asynclink">
-          {% if voteSelf.vote == -1 %}
-          <i class="vote-down-active"></i>
+        <a href="{% url 'cannen.views.rate' '-' current.model.id %}" class="asynclink">
+          {% if rateSelf.rate == -1 %}
+          <i class="rate-down-active"></i>
           {% else %}
-          <i class="vote-down"></i>
+          <i class="rate-down"></i>
           {% endif %}
         </a>
       </div>
