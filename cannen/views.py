@@ -153,6 +153,11 @@ def rate(request, action, songid):
     globalRate = GlobalSongRate.objects.filter(subject=songid, rater=request.user)
     globalSong = GlobalSong.objects.get(id=songid)
     
+    try: #get the dj profile
+        djProfile = UserProfile.objects.filter(user=globalSong.submitter)[0]
+    except:
+        djProfile = UserProfile(user=globalSong.submitter)
+    
     if globalSong.submitter == request.user:
         raise ValidationError("Sorry, %s, You cannot rate on the tracks you queued." % request.user)
     
@@ -166,19 +171,35 @@ def rate(request, action, songid):
 
     if len(globalRate) > 0: #have we previously rated this globalSong?
         nowPlayingRate = globalRate[0]
+        
+        # rating fiture for songs (votes on left, results on right)
+        # V1 V2|R1 R2
+        # U  U |+1 -1
+        # U  D |+1 -2
+        # D  U |-1 +2
+        # D  D |-1 +1
+        # rating figure for dj's (votes on left, results on right)
+        # V1 V2|R1 R2
+        # U  U |+1 -1
+        # U  D |+1 -1
+        # D  U | 0 +1
+        # D  D | 0  0
      
         if nowPlayingRate.rate == 1: #previously rated up
             if action == '+': # already rated up, toggle... to support unvoting
                 removeRate = True
                 action = 1
                 songScore.score = int(songScore.score) - 1
+                djProfile.coinsEarned = int(djProfile.coinsEarned) - 1
             else:
                 action = -1 #change the rate to down
                 songScore.score = int(songScore.score) - 2
+                djProfile.coinsEarned = int(djProfile.coinsEarned) - 1
         else: #previously rated down
             if action == '+':
                 action = 1  #change the rate to up
                 songScore.score = int(songScore.score) + 2
+                djProfile.coinsEarned = int(djProfile.coinsEarned) + 1
             else:
                 removeRate = True
                 action = -1 # already rated up, toggle... to support unvoting
@@ -190,11 +211,13 @@ def rate(request, action, songid):
             nowPlayingRate = GlobalSongRate(rater=request.user, subject=globalSong, rate=1) 
             #change the now playing SongFile's score
             songScore.score = int(songScore.score) + 1
+            djProfile.coinsEarned = int(djProfile.coinsEarned) + 1
         else:
             nowPlayingRate = GlobalSongRate(rater=request.user, subject=globalSong, rate=-1)
             songScore.score = int(songScore.score) - 1
             
     #save the stuff we've updated.
+    djProfile.save()
     songScore.save()
     if not(removeRate):
         nowPlayingRate.save()
