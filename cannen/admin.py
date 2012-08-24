@@ -18,9 +18,5 @@ class GlobalSongRateAdmin(admin.ModelAdmin):
     list_filter = ['subject','rater']
 
 admin.site.register(GlobalSongRate, GlobalSongRateAdmin)
-
-class UserAdmin(admin.ModelAdmin):
-    fields = ['user', 'coins']
-
 admin.site.register(SongFileScore)
 admin.site.register(UserProfile)

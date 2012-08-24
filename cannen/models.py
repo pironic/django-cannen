@@ -112,6 +112,13 @@ def unregister_uploaded(sender, **kwargs):
     url = instance.file.url
     instance.file.delete(save=False)
     backend.get().unregister_uploaded(unquote(url))
+        
+class SongFileScore(models.Model): #haxtend the SongFile model to track its score
+    url = models.CharField(max_length=200)
+    score = models.IntegerField(blank=True, null=True, default=0)
+    
+    def __str__(self):  
+        return "voting sums for %s " % self.url
 
 # for user-local queues
 class UserSong(Orderable):
@@ -171,17 +178,11 @@ class GlobalSongRate(models.Model):
     
     def __str__(self):  
         return "a rate by %s" % self.rater
-        
-class SongFileScore(models.Model): #extend the SongFile model to track its score
-    song = models.OneToOneField(SongFile)
-    score = models.IntegerField(blank=True, null=True, default=0)
-    
-    def __str__(self):  
-        return "voting sums for %s " % self.song.url
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    coins = models.IntegerField(blank=True, null=False)
+    coinsEarned = models.IntegerField(blank=True, null=False, default=0)
+    coinsSpent = models.IntegerField(blank=True, null=False, default=0)
     
     def __str__(self):  
         return "%s's profile" % self.user  

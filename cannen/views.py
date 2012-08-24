@@ -58,10 +58,10 @@ def info(request):
     #try to load the history for the currently playing song...
     try:
         globalSong = GlobalSong.objects.filter(is_playing=True)[0]
-        songScore = SongFileScore.objects.filter(song=globalSong.file)[0]
+        songScore = SongFileScore.objects.filter(url=globalSong.url)[0]
     except:
         #the song doesn't have a history, lets make a new one.
-        songScore = SongFileScore(song=globalSong.file)
+        songScore = SongFileScore(url=globalSong.url)
         
     #return the default values without library
     data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library)
@@ -158,10 +158,10 @@ def rate(request, action, songid):
     
     #try to load the history for the currently playing song...
     try:
-        songScore = SongFileScore.objects.filter(song=globalSong.file)[0]
+        songScore = SongFileScore.objects.filter(url=globalSong.url)[0]
     except:
         #the song doesn't have a history, lets make a new one.
-        songScore = SongFileScore(song=globalSong.file)
+        songScore = SongFileScore(url=globalSong.url)
     # raise ValidationError("debug value = %s" % songScore.score)
 
     if len(globalRate) > 0: #have we previously rated this globalSong?
