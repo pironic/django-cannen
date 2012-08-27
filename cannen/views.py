@@ -39,7 +39,8 @@ def info(request):
     CANNEN_BACKEND = backend.get()
     enable_library = getattr(settings, 'CANNEN_ENABLE_LIBRARY', False)
     try:
-        now_playing = GlobalSong.objects.filter(is_playing=True)[0]
+        globalSong = GlobalSong.objects.filter(is_playing=True)[0]
+        now_playing = globalSong
         now_playing = CANNEN_BACKEND.get_info(now_playing)
     except IndexError:
         now_playing = None
@@ -48,20 +49,24 @@ def info(request):
 
     userqueue = UserSong.objects.filter(owner=request.user)
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
-        
-    #populate the self rate info, in order to show the proper rating icons.
-    try:
-        rateSelf = GlobalSongRate.objects.filter(subject=now_playing.model.id,rater=request.user)[0]
-    except IndexError:
-        rateSelf = 0
+    
+    #if we're playing, we need to populate the rating objects for the info page based on current song.
+    if(now_playing != None):
+        #populate the self rate info, in order to show the proper rating icons.
+        try:
+            rateSelf = GlobalSongRate.objects.filter(subject=globalSong,rater=request.user)[0]
+        except IndexError:
+            rateSelf = 0
 
-    #try to load the history for the currently playing song...
-    try:
-        globalSong = GlobalSong.objects.filter(is_playing=True)[0]
-        songScore = SongFileScore.objects.filter(url=globalSong.url)[0]
-    except:
-        #the song doesn't have a history, lets make a new one.
-        songScore = SongFileScore(url=globalSong.url)
+        #try to load the history for the currently playing song...
+        try:
+            songScore = SongFileScore.objects.filter(url=globalSong.url)[0]
+        except IndexError:
+            #the song doesn't have a history, lets make a new one.
+            songScore = SongFileScore(url=globalSong.url)
+    else:
+        rateSelf = 'X'
+        songScore = 0
         
     #return the default values without library
     data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library)
