@@ -21,6 +21,10 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.template import RequestContext
 from django.conf import settings
 from django.db.models import F # https://docs.djangoproject.com/en/dev/ref/models/instances/?from=olddocs#how-django-knows-to-update-vs-insert
+from django.core.cache import cache
+
+import requests
+from django.core import serializers
 
 import backend
 from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file
@@ -64,9 +68,15 @@ def info(request):
         except IndexError:
             #the song doesn't have a history, lets make a new one.
             songScore = SongFileScore(url=globalSong.url)
+            
+        #can't rate your own stuff, check that!
+        if(globalSong.submitter == request.user):
+            rateSelf = 'X'
+        
     else:
         rateSelf = 'X'
         songScore = 0
+        
         
     #return the default values without library
     data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library)
@@ -79,6 +89,43 @@ def info(request):
         data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library)
 
     return render_to_response('cannen/info.html', data,
+                              context_instance=RequestContext(request))
+
+@login_required
+def navbarinfo(request):
+    listeners = cache.get('rawr')
+    statusUrl = getattr(settings, 'CANNEN_STATUS_URL', None)
+    statusUser = getattr(settings, 'CANNEN_STATUS_USER', None)
+    statusPass = getattr(settings, 'CANNEN_STATUS_PASS', None)
+    statusMount = getattr(settings, 'CANNEN_STATUS_MOUNT', None)
+    
+    if not listeners and statusUrl:
+        r = requests.get('http://' + statusUser + ':' + statusPass + '@' + statusUrl)
+        #root = lxml.html.fromstring(r.content)
+        # work in progress.
+
+        cache.set('rawr',2,300)
+        listeners = cache.get('rawr')
+        
+    if (listeners == 1):
+        strCurrentListeners = "1 Current Listener"
+    else:
+        strCurrentListeners = "%s Current Listeners" % listeners
+    
+    # fetch the user coins or 'leaves'
+    try:
+        userProfile = UserProfile.objects.filter(user=request.user)[0]
+        leaves = userProfile.coinsEarned - userProfile.coinsSpent
+    except IndexError:
+        leaves = 0
+    
+    if (leaves == 1):
+        strLeaves = "1 Leaf"
+    else:
+        strLeaves = "%s Leaves" % leaves
+    
+    data = dict(currentListeners=strCurrentListeners, leaves=strLeaves)
+    return render_to_response('cannen/navbarinfo.html', data,
                               context_instance=RequestContext(request))
 
 @login_required
@@ -183,12 +230,12 @@ def rate(request, action, songid):
         # U  D |+1 -2
         # D  U |-1 +2
         # D  D |-1 +1
-        # rating figure for dj's (votes on left, results on right)
-        # V1 V2|R1 R2
-        # U  U |+1 -1
-        # U  D |+1 -1
-        # D  U | 0 +1
-        # D  D | 0  0
+        # rating figure for dj's (votes on left, results on right, DownRates in third)
+        # V1 V2|R1 R2|D1 D2
+        # U  U |+1 -1| 0  0
+        # U  D |+1 -1| 0 +1
+        # D  U | 0 +1|+1 -1
+        # D  D | 0  0|+1 -1
      
         if nowPlayingRate.rate == 1: #previously rated up
             if action == '+': # already rated up, toggle... to support unvoting
@@ -200,15 +247,18 @@ def rate(request, action, songid):
                 action = -1 #change the rate to down
                 songScore.score = int(songScore.score) - 2
                 djProfile.coinsEarned = int(djProfile.coinsEarned) - 1
+                djProfile.downRatesReceived = int(djProfile.downRatesReceived) + 1
         else: #previously rated down
             if action == '+':
                 action = 1  #change the rate to up
                 songScore.score = int(songScore.score) + 2
                 djProfile.coinsEarned = int(djProfile.coinsEarned) + 1
+                djProfile.downRatesReceived = int(djProfile.downRatesReceived) - 1
             else:
                 removeRate = True
                 action = -1 # already rated up, toggle... to support unvoting
                 songScore.score = int(songScore.score) + 1
+                djProfile.downRatesReceived = int(djProfile.downRatesReceived) - 1
         nowPlayingRate.rate = action
     else: # they havn't rated yet, lets make a new rate
         if action == '+':
@@ -220,6 +270,7 @@ def rate(request, action, songid):
         else:
             nowPlayingRate = GlobalSongRate(rater=request.user, subject=globalSong, rate=-1)
             songScore.score = int(songScore.score) - 1
+            djProfile.downRatesReceived = int(djProfile.downRatesReceived) + 1
             
     #save the stuff we've updated.
     djProfile.save()

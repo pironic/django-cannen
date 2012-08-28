@@ -120,6 +120,28 @@ class SongFileScore(models.Model): #haxtend the SongFile model to track its scor
     def __str__(self):  
         return "voting sums for %s " % self.url
 
+# for user-local queues
+class UserSong(Orderable):
+    owner = models.ForeignKey(User)
+    url = models.CharField(max_length=200)
+    file = models.ForeignKey(SongFile, null=True, blank=True)
+    
+    def __unicode__(self):
+        return self.url.rsplit('/')[-1]
+
+@receiver(post_delete, sender=UserSong)
+def user_song_delete(sender, **kwargs):
+    instance = kwargs['instance']
+    if instance.file:
+        instance.file.garbage_collect()
+
+def add_song_and_file(user, file):
+    newfile = SongFile(owner=user, file=file)
+    newfile.save()
+    newsong = UserSong(owner=newfile.owner, url=unquote(newfile.file.url), file=newfile)
+    newsong.save()
+    return (newsong, newfile)
+
 # for the global queue
 class GlobalSong(models.Model):
     submitter = models.ForeignKey(User)
@@ -157,32 +179,11 @@ class GlobalSongRate(models.Model):
     def __str__(self):  
         return "a rate by %s" % self.rater
 
-# for user-local queues
-class UserSong(Orderable):
-    owner = models.ForeignKey(User)
-    url = models.CharField(max_length=200)
-    file = models.ForeignKey(SongFile, null=True, blank=True)
-    
-    def __unicode__(self):
-        return self.url.rsplit('/')[-1]
-
-@receiver(post_delete, sender=UserSong)
-def user_song_delete(sender, **kwargs):
-    instance = kwargs['instance']
-    if instance.file:
-        instance.file.garbage_collect()
-
-def add_song_and_file(user, file):
-    newfile = SongFile(owner=user, file=file)
-    newfile.save()
-    newsong = UserSong(owner=newfile.owner, url=unquote(newfile.file.url), file=newfile)
-    newsong.save()
-    return (newsong, newfile)
-
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     coinsEarned = models.IntegerField(blank=True, null=False, default=0)
     coinsSpent = models.IntegerField(blank=True, null=False, default=0)
+    downRatesReceived = models.IntegerField(blank=True, null=False, default=0)
     
     def __str__(self):  
         return "%s's profile" % self.user  

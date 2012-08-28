@@ -6,6 +6,9 @@
     <div class="hero-unit" id="current">
       {% if current %}
       <div class="rateBox">
+        {% if rateSelf == 'X' %}
+        <i class="rate-up-inactive"></i>
+        {% else %}
         <a href="{% url 'cannen.views.rate' '+' current.model.id %}" class="asynclink">
           {% if rateSelf.rate == 1 %}
           <i class="rate-up-active"></i>
@@ -13,15 +16,19 @@
           <i class="rate-up"></i>
           {% endif %}
         </a>
+        {% endif %}
         </br>
         <span id="songScore">
           {% if songScore %}
             {{ songScore.score }}
           {% else %}
-            0
+            0 
           {% endif %}
         </span>
         </br>
+        {% if rateSelf == 'X' %}
+        <i class="rate-down-inactive"></i>
+        {% else %}
         <a href="{% url 'cannen.views.rate' '-' current.model.id %}" class="asynclink">
           {% if rateSelf.rate == -1 %}
           <i class="rate-down-active"></i>
@@ -29,6 +36,7 @@
           <i class="rate-down"></i>
           {% endif %}
         </a>
+        {% endif %}
       </div>
       <div class="title">
         {{ current.title }}

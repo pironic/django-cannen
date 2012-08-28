@@ -1,6 +1,7 @@
 // helper to refresh the info asynchronously
 function refresh()
 {
+    $('#leaves').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.
 	$('#info').load('info',
 					function()
 					{
@@ -56,6 +57,7 @@ function refresh()
 						$("#sortable").disableSelection();
 					}
 				   );
+   	$('#navbarInfo').load('navbarinfo');
 }
 
 // helpers for enabling / disabling refresh

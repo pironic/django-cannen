@@ -167,3 +167,11 @@ body
 {
     background-position:-96px
 }    
+.rate-down-inactive
+{
+    background-position:-128px
+}
+.rate-up-inactive
+{
+    background-position:-160px
+}    

@@ -25,16 +25,16 @@ class SongFileScoreAdmin(admin.ModelAdmin):
 admin.site.register(SongFileScore, SongFileScoreAdmin)
 
 class SongFileAdmin(admin.ModelAdmin):
-    ordering = ['file']
+    ordering = ['file','id']
     fields = ['owner', 'file']
-    list_display = ['owner','file']
+    list_display = ['id','owner','file']
     list_filter = ['owner']
     list_display_links = ['file']
 admin.site.register(SongFile, SongFileAdmin)
 
 class UserProfileAdmin(admin.ModelAdmin):
     ordering = ['user']
-    list_display = ['user','coinsEarned','coinsSpent']
+    list_display = ['user','coinsEarned','coinsSpent','downRatesReceived']
 admin.site.register(UserProfile, UserProfileAdmin)
 
 class UserSongAdmin(admin.ModelAdmin):

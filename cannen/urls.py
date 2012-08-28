@@ -24,5 +24,6 @@ urlpatterns = patterns('cannen.views',
     url(r'^play/(.*)$', 'play'),
     url(r'^library$', 'library'),
     url(r'^info$', 'info'),
+    url(r'^navbarinfo$', 'navbarinfo'),
     url(r'^$', 'index'),
 )

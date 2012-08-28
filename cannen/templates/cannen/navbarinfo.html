@@ -1,0 +1,18 @@
+<ul class="nav nav-list">
+  {% if currentListeners %}
+  <li><a href="http://radio.overviewer.org/status.xsl?mount=/writhem.mp3">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <i class="icon-user icon-white"></i> {{ currentListeners }}
+  </a></li>
+  {% endif %}
+  {% if leaves %}
+  <script>$('#leaves').tooltip('hide')</script>
+  <li><a id="leaves" rel="tooltip" data-placement='bottom' 
+    title='Leaves are earned by other listeners liking your queued selections<br/>
+    You will be able to spend your leaves in future updates for additional features.
+    '>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <i class="icon-leaf icon-white"></i> {{ leaves }}
+  </a></li>
+  {% endif %}
+</ul>
