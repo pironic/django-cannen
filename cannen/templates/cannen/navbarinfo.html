@@ -1,6 +1,7 @@
 <ul class="nav nav-list">
   {% if currentListeners %}
-  <li><a href="http://radio.overviewer.org/status.xsl?mount=/writhem.mp3">
+  
+  <li><a{% if statusLink %} href="{{ statusLink }}"{% endif %}>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <i class="icon-user icon-white"></i> {{ currentListeners }}
   </a></li>

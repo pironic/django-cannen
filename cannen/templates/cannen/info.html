@@ -6,10 +6,14 @@
     <div class="hero-unit" id="current">
       {% if current %}
       <div class="rateBox">
+        <script>$('#rate-up').tooltip()</script>
         {% if rateSelf == 'X' %}
-        <i class="rate-up-inactive"></i>
+        <a id="rate-up" title="Sorry, you can't rate songs that you've queued.">
+          <i class="rate-up-inactive"></i>
+        </a>
         {% else %}
-        <a href="{% url 'cannen.views.rate' '+' current.model.id %}" class="asynclink">
+        <a id="rate-up" href="{% url 'cannen.views.rate' '+' current.model.id %}" class="asynclink" 
+          title="<i class='icon-leaf icon-white'></i> Give a leaf to the DJ who queued this song">
           {% if rateSelf.rate == 1 %}
           <i class="rate-up-active"></i>
           {% else %}
@@ -26,10 +30,14 @@
           {% endif %}
         </span>
         </br>
+        <script>$('#rate-down').tooltip()</script>
         {% if rateSelf == 'X' %}
-        <i class="rate-down-inactive"></i>
+        <a id="rate-down" title="Sorry, you can't rate songs that you've queued.">
+          <i class="rate-down-inactive"></i>
+        </a>
         {% else %}
-        <a href="{% url 'cannen.views.rate' '-' current.model.id %}" class="asynclink">
+        <a id="rate-down" href="{% url 'cannen.views.rate' '-' current.model.id %}" class="asynclink" 
+          title="<i class='icon-fire icon-white'></i> Burn the DJ who queued this song">
           {% if rateSelf.rate == -1 %}
           <i class="rate-down-active"></i>
           {% else %}

@@ -2,6 +2,8 @@
 function refresh()
 {
     $('#leaves').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.
+    $('#rate-up').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.
+    $('#rate-down').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.
 	$('#info').load('info',
 					function()
 					{

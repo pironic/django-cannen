@@ -22,12 +22,11 @@ from django.template import RequestContext
 from django.conf import settings
 from django.db.models import F # https://docs.djangoproject.com/en/dev/ref/models/instances/?from=olddocs#how-django-knows-to-update-vs-insert
 from django.core.cache import cache
-
-import requests
-from django.core import serializers
-
 import backend
 from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file
+
+import urllib, urllib2, httplib, sys
+from xml.dom.minidom import parse, parseString
 
 @login_required
 def index(request):
@@ -93,19 +92,30 @@ def info(request):
 
 @login_required
 def navbarinfo(request):
-    listeners = cache.get('rawr')
+    statusLink = getattr(settings, 'CANNEN_STATUS_LINK', None)
+    listeners = cache.get('listeners')
     statusUrl = getattr(settings, 'CANNEN_STATUS_URL', None)
     statusUser = getattr(settings, 'CANNEN_STATUS_USER', None)
     statusPass = getattr(settings, 'CANNEN_STATUS_PASS', None)
     statusMount = getattr(settings, 'CANNEN_STATUS_MOUNT', None)
     
     if not listeners and statusUrl:
-        r = requests.get('http://' + statusUser + ':' + statusPass + '@' + statusUrl)
-        #root = lxml.html.fromstring(r.content)
-        # work in progress.
-
-        cache.set('rawr',2,300)
-        listeners = cache.get('rawr')
+        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr.add_password(None, statusUrl, statusUser, statusPass)
+        handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib2.build_opener(handler)
+        try:
+            file_obj = opener.open(statusUrl)
+            dom = parseString(file_obj.read())
+            for element in dom.getElementsByTagName('icestats'):
+                source = element.getElementsByTagName('source')
+                for n in range(1, len(source)):
+                    if (source[n].getAttribute('mount') == statusMount):
+                        cache.set('listeners',source[n].getElementsByTagName('listeners')[0].firstChild.data,300)
+        except IOError, e:
+            listeners =  "Error: %s" % e
+          
+        listeners = cache.get('listeners')
         
     if (listeners == 1):
         strCurrentListeners = "1 Current Listener"
@@ -124,7 +134,7 @@ def navbarinfo(request):
     else:
         strLeaves = "%s Leaves" % leaves
     
-    data = dict(currentListeners=strCurrentListeners, leaves=strLeaves)
+    data = dict(statusLink=statusLink, currentListeners=strCurrentListeners, leaves=strLeaves)
     return render_to_response('cannen/navbarinfo.html', data,
                               context_instance=RequestContext(request))
 

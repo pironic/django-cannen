@@ -161,3 +161,15 @@ CANNEN_LISTEN_URLS = [
 
 You can also set the title on the default template with
 `CANNEN_TITLE`.
+
+#### CANNEN_STATUS_*
+
+There are many a Status fields that you can set in order to pull the number of 
+Current Listeners and display it in the title bar. Currently this only supports
+icecast admin/stats.xml formats, but can be rejiggered in the code to support a
+miriad of status xml formats. To display current listeners a minimum of the 
+`CANNEN_STATUS_URL` is required to be set to the url of the admin/stats.xml.
+`CANNEN_STATUS_LINK` can be set to the link you would like this current listener 
+title to link to your users. `CANNEN_STATUS_USER` and `CANNEN_STATUS_PASS` are 
+to define the user/pass combo required to access your icecast admin area.
+`CANNEN_STATUS_MOUNT` is the mount name that you are broadcasting to.
