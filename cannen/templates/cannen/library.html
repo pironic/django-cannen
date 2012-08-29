@@ -45,6 +45,26 @@
         //ondomready
         $(function () {
           listFilter($("#header"), $("#not-sortable"));
+          
+          // handle async links
+          $('a.asynclink').click(
+            function (event)
+            {
+              event.preventDefault();
+              
+              var anchor = $(this);
+              $.get(anchor.attr('href'),
+                  function (data)
+                  {
+                    $('#navbarInfo').load('navbarinfo');
+                  }
+              );
+            }
+          );
+          
+          // load the title bar stuff.
+          $('#navbarInfo').load('navbarinfo');
+
         });
       }(jQuery));
     </script>
@@ -72,7 +92,11 @@
 			{% endif %}
 		  </a>
 		  
-		  <!-- useful bits on the right -->
+      <!-- show the listener count and currency earned. -->
+      <div id="navbarInfo">
+      </div>
+          
+      <!-- useful bits on the right -->
 		  <ul class="nav pull-right">
 			<!-- stream menu -->
 			{% if listen_urls %}
@@ -133,7 +157,7 @@
     <div class="span4" id="personal-queue">
       <ul class="nav nav-list">
           <li class="nav-header">
-          Your Queue
+          Your Queue <a href={% url 'cannen.views.library' %}>Refresh Info</a>
         </li>
       </ul>
       {% if queue %}
