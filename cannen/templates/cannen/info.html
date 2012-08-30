@@ -162,19 +162,33 @@
   <div class="span5" id="leaderboard">
     <ul class="nav nav-list">
       <li class="nav-header">
-        Leaderboard
+        Best DJs
       </li>
     </ul>
     <ul id="not-sortable" class="nav nav-list">
-      {% for song in bestSongs %}
-      <li class="context-container" id="leaderboard-{{ song.model.id }}">
+      {% for user in leaderboard.bestDJs %}
+      <li class="context-container" id="leaderboard-bestdj-{{ user.model.id }}">
         <span class="context">
-          <i class="icon-remove"></i>
+          <i class="icon-user"></i>
         </span>
-        <span class="title">{{ song.title }}</span>
-        {% if song.artist %}
-        <span class="subtitle">by {{ song.artist }}</span>
-        {% endif %}
+        <span class="title">{{ user.user }}</span>
+        <span class="subtitle"><i class="icon-leaf"></i> {{ user.coinsEarned }}</span>
+      </li>
+      {% endfor %}      
+    </ul>
+    <ul class="nav nav-list">
+      <li class="nav-header">
+        Worst DJs
+      </li>
+    </ul>
+    <ul id="not-sortable" class="nav nav-list">
+      {% for user in leaderboard.worstDJs %}
+      <li class="context-container" id="leaderboard-worstdj-{{ user.model.id }}">
+        <span class="context">
+          <i class="icon-user"></i>
+        </span>
+        <span class="title">{{ user.user }}</span>
+        <span class="subtitle"><i class="icon-fire"></i>{{ user.downRatesReceived }}</span>      
       </li>
       {% endfor %}      
     </ul>

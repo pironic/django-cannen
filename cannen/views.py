@@ -21,6 +21,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.template import RequestContext
 from django.conf import settings
 from django.db.models import F # https://docs.djangoproject.com/en/dev/ref/models/instances/?from=olddocs#how-django-knows-to-update-vs-insert
+from django.db.models import Min
 from django.core.cache import cache
 import backend
 from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file
@@ -86,10 +87,11 @@ def info(request):
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
         
-        bestSongs = None
-        #bestSongs = SongFile.objects.annotate(score='songfilescore__score').order_by('-score')[:5]
+        bestDJs = UserProfile.objects.filter().order_by('-coinsEarned')[:5]
+        worstDJs = UserProfile.objects.filter().order_by('-downRatesReceived')[:5]
+        leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs)
         
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, leaderboard=bestSongs)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, leaderboard=leaderboard)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
