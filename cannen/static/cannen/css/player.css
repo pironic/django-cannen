@@ -61,14 +61,14 @@ body
 	font-size: 1.4em;
 }
 
-#personal-queue, #library > ul
+#personal-queue > ul, #leaderboard> ul, #library 
 {
 	border-left: 1px solid #ccc;
 	margin-left: -1px;
 	padding-bottom: 5px;
 }
 
-#personal-queue > p
+#personal-queue > p, #leaderboard > p
 {
 	color: #666;
 	padding-left: 1em;

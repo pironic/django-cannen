@@ -157,6 +157,29 @@
     <p>add songs here for them to be automatically added when it's your turn</p>
     {% endif %}
   </div>
+
+  {% if leaderboard %}
+  <div class="span5" id="leaderboard">
+    <ul class="nav nav-list">
+      <li class="nav-header">
+        Leaderboard
+      </li>
+    </ul>
+    <ul id="not-sortable" class="nav nav-list">
+      {% for song in bestSongs %}
+      <li class="context-container" id="leaderboard-{{ song.model.id }}">
+        <span class="context">
+          <i class="icon-remove"></i>
+        </span>
+        <span class="title">{{ song.title }}</span>
+        {% if song.artist %}
+        <span class="subtitle">by {{ song.artist }}</span>
+        {% endif %}
+      </li>
+      {% endfor %}      
+    </ul>
+  </div>
+  {% endif %}
 </div>
 
 

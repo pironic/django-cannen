@@ -1,6 +1,7 @@
 // helper to refresh the info asynchronously
 function refresh()
 {
+    $('#burns').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.
     $('#leaves').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.
     $('#rate-up').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.
     $('#rate-down').tooltip('hide'); // can't come up with a better way to do this yet. prevents orphaned items from persisting though.

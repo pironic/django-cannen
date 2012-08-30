@@ -16,4 +16,13 @@
     <i class="icon-leaf icon-white"></i> {{ leaves }}
   </a></li>
   {% endif %}
+  {% if burns %}
+  <script>$('#burns').tooltip('hide')</script>
+  <li><a id="burns" rel="tooltip" data-placement='bottom' 
+    title="Burns are the number of times that your song wasn't liked by other listeners<br/>
+      But don't worry, we won't tell anyone!">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <i class="icon-fire icon-white"></i> {{ burns }}
+  </a></li>
+  {% endif %}
 </ul>

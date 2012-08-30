@@ -85,7 +85,11 @@ def info(request):
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library)
+        
+        bestSongs = None
+        #bestSongs = SongFile.objects.annotate(score='songfilescore__score').order_by('-score')[:5]
+        
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, leaderboard=bestSongs)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -126,15 +130,22 @@ def navbarinfo(request):
     try:
         userProfile = UserProfile.objects.filter(user=request.user)[0]
         leaves = userProfile.coinsEarned - userProfile.coinsSpent
+        burns = userProfile.downRatesReceived
     except IndexError:
         leaves = 0
+        burns = 0
     
     if (leaves == 1):
         strLeaves = "1 Leaf"
     else:
         strLeaves = "%s Leaves" % leaves
+        
+    if (burns == 1):
+        strBurns = "1 Burn"
+    else:
+        strBurns = "%s Burns" % burns
     
-    data = dict(statusLink=statusLink, currentListeners=strCurrentListeners, leaves=strLeaves)
+    data = dict(statusLink=statusLink, currentListeners=strCurrentListeners, leaves=strLeaves, burns=strBurns)
     return render_to_response('cannen/navbarinfo.html', data,
                               context_instance=RequestContext(request))
 
