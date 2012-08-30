@@ -47,6 +47,11 @@ class PlaylistManager(object):
                 global_to_add = GlobalSong.from_user_song(to_add)
                 global_to_add.save()
                 to_add.delete()
+            # queue up a random item into the coming up list if nothing is there, and shuffle is enabled.
+            if getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and len(GlobalSong.objects.filter(is_playing=False)) < 1:
+                randomSong = SongFile.objects.order_by('?')[0]
+                global_to_add = GlobalSong.from_song_file(randomSong)
+                global_to_add.save()                
                                 
         # add some now
         add_queued()
