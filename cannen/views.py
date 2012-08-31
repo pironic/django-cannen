@@ -127,5 +127,23 @@ def play(request, url):
     
 @login_required
 def vote(request, action, pollid):
-    raise ValidationError("not built yet. rawr.")
+    try: #get the poll from the id
+        vote_message = VoteMessage.objects.get(id=pollid)
+    except:
+        raise ValidationError("Invalid PollID Specified.")
+        
+    try: #existing vote?
+        user_vote = Vote.objects.filter(voter=request.user, vote_message=vote_message)[0]
+    except IndexError: #nope, lets make a new instance to save it.
+        user_vote = Vote(voter=request.user, vote_message=vote_message)
+ 
+    user_vote.vote = {
+        'n' : lambda: None,
+        't' : lambda: True,
+        'f' : lambda: False
+    }[action]()
+    
+    user_vote.save()
+    
+    #raise ValidationError("not built yet. rawr.")
     return HttpResponseRedirect(reverse('cannen.views.index'))

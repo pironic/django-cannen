@@ -175,9 +175,12 @@ class VoteMessage(models.Model):
     globalSong = models.ForeignKey(GlobalSong, null=True, blank=True, on_delete=models.CASCADE)
     
     def __unicode__(self):
-        return "A poll by " + str(self.owner) + " to " + str(self.action) + " for " + str(self.coinCostOwner) + " coins"
+        return "A poll by " + str(self.owner) + " to '" + str(self.action) + "' for " + str(self.coinCostOwner) + " coins"
     
 class Vote(models.Model):
     vote_message = models.ForeignKey(VoteMessage, on_delete=models.CASCADE)
     voter = models.ForeignKey(User)
     vote = models.NullBooleanField(default=False, null=True)
+        
+    def __unicode__(self):
+        return "A poll by " + str(self.voter) + " for '" + str(self.vote_message) + "'"
