@@ -164,3 +164,15 @@ def global_song_delete(sender, **kwargs):
     instance = kwargs['instance']
     if instance.file:
         instance.file.garbage_collect()
+
+# for the voting table
+class VoteMessage(models.Model):
+    action = models.CharField(max_length=200)
+    owner = models.ForeignKey(User)
+    coinCost = models.IntegerField(default=0)
+    globalSong = models.ForeignKey(GlobalSong, null=True, blank=True)
+    
+class Vote(models.Model):
+    vote_message = models.ForeignKey(VoteMessage)
+    voter = models.ForeignKey(User)
+    vote = models.BooleanField(default=False, null=False)
