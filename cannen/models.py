@@ -193,3 +193,24 @@ class UserProfile(models.Model):
            profile, created = UserProfile.objects.get_or_create(user=instance)  
 
     post_save.connect(create_user_profile, sender=User) 
+
+# for the voting table
+class VoteMessage(models.Model):
+    action = models.CharField(max_length=200)
+    owner = models.ForeignKey(User)
+    coinCostOwner = models.IntegerField(default=0)
+    coinCostAgree = models.IntegerField(default=0)
+    coinCostDisagree = models.IntegerField(default=0)
+    globalSong = models.ForeignKey(GlobalSong, null=True, blank=True, on_delete=models.CASCADE)
+    
+    def __unicode__(self):
+        return "A poll by " + str(self.owner) + " to '" + str(self.action) + "' for " + str(self.coinCostOwner) + " coins"
+    
+class Vote(models.Model):
+    vote_message = models.ForeignKey(VoteMessage, on_delete=models.CASCADE)
+    voter = models.ForeignKey(User)
+    vote = models.NullBooleanField(default=None, null=True)
+    subscribed = models.BooleanField(default=True)
+        
+    def __unicode__(self):
+        return "A vote by " + str(self.voter) + " for '" + str(self.vote_message) + "'"

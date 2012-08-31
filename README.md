@@ -173,3 +173,11 @@ miriad of status xml formats. To display current listeners a minimum of the
 title to link to your users. `CANNEN_STATUS_USER` and `CANNEN_STATUS_PASS` are 
 to define the user/pass combo required to access your icecast admin area.
 `CANNEN_STATUS_MOUNT` is the mount name that you are broadcasting to.
+
+#### CANNEN_VOTES_REQUIRED & CANNEN_VOTES_SUCCESS_RATIO
+
+Specifying `CANNEN_VOTES_REQUIRED` as an integer will set a requirement to have a 
+certain number of listeners vote on the current poll before it is dismissed 
+as defeated. Defaults are 60% of this number in agreement will also pass the poll, 
+but that can be overriden by defining `CANNEN_VOTES_SUCCESS_RATIO`. 
+Defaults are: 5, 0.60 respectively
