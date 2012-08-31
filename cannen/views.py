@@ -58,7 +58,7 @@ def info(request):
         except IndexError: #nope, lets make a new instance to save it.
             user_vote = Vote(voter=request.user, vote_message=vote_message, vote=None)
         requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
-        requiredVotesYes = int(round(requiredVotes * 0.6,0))
+        requiredVotesYes = int(round(requiredVotes * getattr(settings, 'CANNEN_VOTES_SUCCESS_RATIO', 0.6),0))
         totalVotes = Vote.objects.filter(vote_message=vote_message).exclude(vote=None).count()
         stats = dict(required=requiredVotes,requiredYes=requiredVotesYes,total=totalVotes)
         pollData.append(dict(poll=vote_message,vote=user_vote,stats=stats))
@@ -140,6 +140,26 @@ def play(request, url):
     return HttpResponseRedirect(reverse('cannen.views.index'))
     
 @login_required
+def poll(request, action, songid=None):
+    
+    if songid and action == 'skip':
+        try:#try to load the globalSong that is referenced for skipping
+            globalSong = GlobalSong.objects.get(id=songid)
+        except IndexError: 
+            raise ValidationError("Invalid song speicfied to skip.")
+            
+        try: #existing poll?
+            vote_message = VoteMessage.objects.filter(owner=request.user, action=action, globalSong=globalSong)[0]
+        except IndexError: #nope, lets make a new instance to save it.
+            vote_message = VoteMessage(owner=request.user, action=action,globalSong=globalSong)
+        
+        vote_message.save()
+    #else:
+        
+    return HttpResponseRedirect(reverse('cannen.views.index'))
+
+
+@login_required
 def vote(request, action, pollid):
     try: #get the poll from the id
         vote_message = VoteMessage.objects.get(id=pollid)
@@ -165,7 +185,7 @@ def vote(request, action, pollid):
     requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
     totalVotes = Vote.objects.filter(vote_message=vote_message).exclude(vote=None).count()
     votesFor = Vote.objects.filter(vote_message=vote_message,vote=True).count()
-    votesNeededYes = int(round(requiredVotes * 0.6,0))
+    votesNeededYes = int(round(requiredVotes * getattr(settings, 'CANNEN_VOTES_SUCCESS_RATIO', 0.6),0))
     if votesFor >= votesNeededYes: #success, pass the poll, then remove it.
         if(vote_message.action == 'skip'): #skip method
             if not vote_message.globalSong:
@@ -173,7 +193,8 @@ def vote(request, action, pollid):
             else: #its a valid song, lets skip it.
                 backend = cannen.backend.get()
                 backend.stop()
-                    
+        else:
+            raise ValidationError("Poll complete but no method built for this action<br/>votesFor: "+str(votesFor)+"<br/>votesAgainst:"+str(totalVotes-votesFor)+"<br/>")
     elif totalVotes >= requiredVotes: #failure on the poll. remove it.
         vote_message.delete()
     

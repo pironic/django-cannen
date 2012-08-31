@@ -31,11 +31,16 @@
           document.title = document.title + ' ({{ current.elapsed }} / {{ current.time }})';
         });
       </script>
-
       <div class="time">
-        time: {{ current.elapsed }} / {{ current.time }}
+        time: {{ current.elapsed }} / {{ current.time }} 
       </div>
       {% endif %}
+      <div class="btn-group">
+          <script>$('#skipTool').tooltip()</script>
+          <a href="{% url 'cannen.views.poll' 'skip' current.model.id %}" id="skipTool" class="btn btn-mini asynclink" rel="tooltip" data-animation='false' data-placement='bottom' title="Initiate a vote to skip this song">
+            <i class="icon-fast-forward"></i>
+          </a>
+      </div>
       {% else %}
       <script type="text/javascript">
         $(document).ready(function() {
@@ -81,8 +86,10 @@
 
 <div class="row">
   <!-- the queues -->
-  <div class="span8" id="main-queue">
-    <h2>coming up</h2>
+  <div class="span12" id="main-queue">
+    <h2>coming up</h2>      
+    
+
     {% if playlist %}
     <ul class="unstyled">
       {% for song in playlist %}

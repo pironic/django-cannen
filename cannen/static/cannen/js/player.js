@@ -1,6 +1,7 @@
 // helper to refresh the info asynchronously
 function refresh()
 {
+    $('#skipTool').tooltip('hide')
 	$('#info').load('info',
 					function()
 					{

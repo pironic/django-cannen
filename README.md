@@ -161,3 +161,11 @@ CANNEN_LISTEN_URLS = [
 
 You can also set the title on the default template with
 `CANNEN_TITLE`.
+
+#### CANNEN_VOTES_REQUIRED & CANNEN_VOTES_SUCCESS_RATIO
+
+Specifying `CANNEN_VOTES_REQUIRED` as an integer will set a requirement to have a 
+certain number of listeners vote on the current poll before it is dismissed 
+as defeated. Defaults are 60% of this number in agreement will also pass the poll, 
+but that can be overriden by defining `CANNEN_VOTES_SUCCESS_RATIO`. 
+Defaults are: 5, 0.60 respectively
