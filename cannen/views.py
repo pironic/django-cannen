@@ -21,10 +21,11 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.template import RequestContext
 from django.conf import settings
 from django.db.models import F # https://docs.djangoproject.com/en/dev/ref/models/instances/?from=olddocs#how-django-knows-to-update-vs-insert
-from django.db.models import Min
 from django.core.cache import cache
 import backend
 from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file
+from django.contrib.auth.models import User
+
 
 import urllib, urllib2, httplib, sys
 from xml.dom.minidom import parse, parseString
@@ -71,27 +72,39 @@ def info(request):
             
         #can't rate your own stuff, check that!
         if(globalSong.submitter == request.user):
-            rateSelf = 'X'
-        
+            rateSelf = 'X'    
     else:
         rateSelf = 'X'
         songScore = 0
         
-        
-    #return the default values without library
-    data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library)
-    
     #if the library is enabled, then prepare the data and pass it to the template
     if enable_library:
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
         
-        bestDJs = UserProfile.objects.filter().order_by('-coinsEarned')[:5]
-        worstDJs = UserProfile.objects.filter().order_by('-downRatesReceived')[:5]
-        leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs)
+        #filter out the shuffle user.
+        shuffle_user = None
+        shuffle_user_id = getattr(settings, 'CANNEN_SHUFFLE_USER_ID', None)
+        if shuffle_user_id:
+            shuffle_user = User.objects.get(id=shuffle_user_id)
+            
+        bestDJs = UserProfile.objects.exclude(user=shuffle_user).order_by('-coinsEarned')[:5]
+        worstDJs = UserProfile.objects.exclude(user=shuffle_user).order_by('-downRatesReceived')[:5]
+        bestSongRates = SongFileScore.objects.order_by('-score')[:5]
+        bestSongs = []
+        for n in range(0,5):
+            songFile = SongFile.objects.filter(file=bestSongRates[n].url)[0]
+            if songFile:
+                bestSongs.append(dict(tags=CANNEN_BACKEND.get_info(songFile),rates=bestSongRates[n]))
+            else:
+                bestSongs.append(dict(tags=dict(title=bestSongRates[n]),rates=bestSongRates[n]))
+             
+        leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs, bestSongs=bestSongs)
         
         data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, leaderboard=leaderboard)
+    else: #return the default values without library
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))

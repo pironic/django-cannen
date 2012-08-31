@@ -162,33 +162,52 @@
   <div class="span5" id="leaderboard">
     <ul class="nav nav-list">
       <li class="nav-header">
-        Best DJs
+        <i class="icon-leaf"></i> Best DJs
       </li>
     </ul>
     <ul id="not-sortable" class="nav nav-list">
       {% for user in leaderboard.bestDJs %}
       <li class="context-container" id="leaderboard-bestdj-{{ user.model.id }}">
         <span class="context">
-          <i class="icon-user"></i>
+           <i class="icon-user"></i>
         </span>
+        <span class="subtitle">{{ user.coinsEarned }}</span>
         <span class="title">{{ user.user }}</span>
-        <span class="subtitle"><i class="icon-leaf"></i> {{ user.coinsEarned }}</span>
       </li>
       {% endfor %}      
     </ul>
     <ul class="nav nav-list">
       <li class="nav-header">
-        Worst DJs
+        <i class="icon-music"></i> Best Songs
+      </li>
+    </ul>
+    <ul id="not-sortable" class="nav nav-list">
+      {% for song in leaderboard.bestSongs %}
+      <li class="context-container" id="leaderboard-bestsong-{{ song.tags.model.id }}">
+        <span class="context">
+          <a href="{% url 'cannen.views.play' song.rates.url %}" class="asynclink">
+            <i class="icon-play"></i>
+          </a>
+        </span>
+        <span class="badge"> {{ song.rates.score }}</span>
+        <span class="title">{{ song.tags.title }}</span>
+        <span class="subtitle">{{ song.tags.artist }}</span>
+      </li>
+      {% endfor %}      
+    </ul>
+    <ul class="nav nav-list">
+      <li class="nav-header">
+        <i class="icon-fire"></i> Worst DJs 
       </li>
     </ul>
     <ul id="not-sortable" class="nav nav-list">
       {% for user in leaderboard.worstDJs %}
       <li class="context-container" id="leaderboard-worstdj-{{ user.model.id }}">
         <span class="context">
-          <i class="icon-user"></i>
+           <i class="icon-user"></i>
         </span>
+        <span class="subtitle">{{ user.downRatesReceived }}</span>      
         <span class="title">{{ user.user }}</span>
-        <span class="subtitle"><i class="icon-fire"></i>{{ user.downRatesReceived }}</span>      
       </li>
       {% endfor %}      
     </ul>

@@ -118,7 +118,7 @@ class SongFileScore(models.Model): #haxtend the SongFile model to track its scor
     score = models.IntegerField(blank=True, null=True, default=0)
     
     def __str__(self):  
-        return "voting sums for %s " % self.url
+        return self.url.rsplit('/')[-1].replace('_',' ').replace('.mp3','').replace('.mov','')
 
 # for user-local queues
 class UserSong(Orderable):
