@@ -17,6 +17,6 @@ class VoteMessageAdmin(admin.ModelAdmin):
     list_filter = ['action']
 admin.site.register(VoteMessage, VoteMessageAdmin)
 class VoteAdmin(admin.ModelAdmin):
-    fields = ['vote_message', 'voter', 'vote']
+    fields = ['vote_message', 'voter', 'vote', 'subscribed']
     list_filter = ['vote_message']
 admin.site.register(Vote, VoteAdmin)

@@ -57,16 +57,24 @@
 </div>
 
 {% if polls %}
-
-{% for poll in polls %}
-<div class="alert alert-info">
-  <a href="{% url 'cannen.views.vote' 'n' poll.id %}" class="close asynclink" data-dismiss="alert">×</a>
-  <h4>{{ poll.owner }} would like to {{ poll.action }}{%if poll.globalSong %} {{ poll.globalSong }}{% endif %}</h4>
-  {% if poll.coinCostOwner > 0 %}If this vote passes then {{ poll.owner }} will be required to spend <i class="icon-leaf"></i>{{ poll.coinCostOwner }}. {% endif %}Do you support them?<br/>
-  {% if poll.coinCostAgree > 0 %}<b>To agree with this poll it will cost you <i class="icon-leaf"></i>{{ poll.coinCostAgree }}</b>. Leaves will only be charged if this poll succeeds.<br/>{% endif %}
-  {% if poll.coinCostDisagree > 0 %}<b>To disagree with this poll it will cost you <i class="icon-leaf"></i>{{ poll.coinCostDisagree }}</b>. Leaves will only be charged if this poll fails.<br/>{% endif %}
-  <a href="{% url 'cannen.views.vote' 't' poll.id %}" class="btn btn-mini asynclink" data-dismiss="alert"><i class="icon-thumbs-up"></i></a>
-  <a href="{% url 'cannen.views.vote' 'f' poll.id %}" class="btn btn-mini asynclink" data-dismiss="alert"><i class="icon-thumbs-down"></i></a>
+{% for d in polls %}
+<div class="alert {% if d.vote.vote != None and d.vote.vote %}alert-success{% elif d.vote.vote != None and not d.vote.vote  %}alert-error{% else %}alert-info{% endif %}">
+  <a href="{% url 'cannen.views.vote' 'n' d.poll.id %}" class="close asynclink" data-dismiss="alert">×</a>
+  <h4>{{ d.poll.owner }} would like to {{ d.poll.action }}{%if d.poll.globalSong %} {{ d.poll.globalSong }}{% endif %}</h4>
+  {% if d.poll.coinCostOwner > 0 %}If this vote passes then {{ d.poll.owner }} will be required to spend <i class="icon-leaf"></i>{{ d.poll.coinCostOwner }}. {% endif %}Do you support them?<br/>
+  {% if d.poll.coinCostAgree > 0 %}<b>To agree with this poll it will cost you <i class="icon-leaf"></i>{{ d.poll.coinCostAgree }}</b>. Leaves will only be charged when the required votes are met.<br/>{% endif %}
+  {% if d.poll.coinCostDisagree > 0 %}<b>To disagree with this poll it will cost you <i class="icon-leaf"></i>{{ d.poll.coinCostDisagree }}</b>. Leaves will only be charged when the required votes are met.<br/>{% endif %}
+  <a href="{% url 'cannen.views.vote' 't' d.poll.id %}"
+    class="btn btn-mini asynclink{% if d.vote.vote != None and d.vote.vote %} active{% endif %}" data-dismiss="alert">
+      <i class="icon-thumbs-up"></i>
+  </a>
+  <a href="{% url 'cannen.views.vote' 'f' d.poll.id %}" 
+    class="btn btn-mini asynclink{% if d.vote.vote != None and not d.vote.vote %} active{% endif %}" data-dismiss="alert">
+      <i class="icon-thumbs-down"></i>
+  </a>
+  {% if d.stats %}
+    {{ d.stats.total }} of {{ d.stats.required }} votes required of which {{ d.stats.requiredYes }} have to be in favor.
+  {% endif %}
 </div>
 {% endfor %}
 {% endif %}

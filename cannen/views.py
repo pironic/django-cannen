@@ -20,8 +20,10 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.template import RequestContext
 from django.conf import settings
+from django.db.models import Count
 
 import backend
+import cannen.backend
 from .models import UserSong, GlobalSong, SongFile, add_song_and_file, VoteMessage, Vote
 
 @login_required
@@ -48,16 +50,28 @@ def info(request):
     userqueue = UserSong.objects.filter(owner=request.user)
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
     
-    polls = VoteMessage.objects.exclude(vote__voter=request.user)
+    vote_messages = VoteMessage.objects.exclude(vote__voter=request.user, vote__subscribed=False)#.annotate(myVote='vote__vote')
+    pollData = []
+    for vote_message in vote_messages:
+        try: #existing vote?
+            user_vote = Vote.objects.filter(voter=request.user, vote_message=vote_message)[0]
+        except IndexError: #nope, lets make a new instance to save it.
+            user_vote = Vote(voter=request.user, vote_message=vote_message, vote=None)
+        requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
+        requiredVotesYes = int(round(requiredVotes * 0.6,0))
+        totalVotes = Vote.objects.filter(vote_message=vote_message).exclude(vote=None).count()
+        stats = dict(required=requiredVotes,requiredYes=requiredVotesYes,total=totalVotes)
+        pollData.append(dict(poll=vote_message,vote=user_vote,stats=stats))
+    
 
     #if the library is enabled, then prepare the data and pass it to the template
     if enable_library:
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, library=userlibrary, enable_library=enable_library, polls=polls)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, library=userlibrary, enable_library=enable_library, polls=pollData)
     else: #return the default values without library
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, enable_library=enable_library, polls=polls)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, enable_library=enable_library, polls=pollData)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -136,14 +150,32 @@ def vote(request, action, pollid):
         user_vote = Vote.objects.filter(voter=request.user, vote_message=vote_message)[0]
     except IndexError: #nope, lets make a new instance to save it.
         user_vote = Vote(voter=request.user, vote_message=vote_message)
- 
-    user_vote.vote = {
-        'n' : lambda: None,
-        't' : lambda: True,
-        'f' : lambda: False
-    }[action]()
+    
+    if (action == 'n'): # provide option to opt-out or dismiss, all in one!
+        user_vote.subscribed = False
+    else: 
+        user_vote.vote = {
+            'n' : lambda: None,
+            't' : lambda: True,
+            'f' : lambda: False
+        }[action]()
     
     user_vote.save()
+        
+    requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
+    totalVotes = Vote.objects.filter(vote_message=vote_message).exclude(vote=None).count()
+    votesFor = Vote.objects.filter(vote_message=vote_message,vote=True).count()
+    votesNeededYes = int(round(requiredVotes * 0.6,0))
+    if votesFor >= votesNeededYes: #success, pass the poll, then remove it.
+        if(vote_message.action == 'skip'): #skip method
+            if not vote_message.globalSong:
+                raise ValidationError("Invalid song speicfied to skip.")
+            else: #its a valid song, lets skip it.
+                backend = cannen.backend.get()
+                backend.stop()
+                    
+    elif totalVotes >= requiredVotes: #failure on the poll. remove it.
+        vote_message.delete()
     
     #raise ValidationError("not built yet. rawr.")
     return HttpResponseRedirect(reverse('cannen.views.index'))

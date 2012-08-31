@@ -180,7 +180,8 @@ class VoteMessage(models.Model):
 class Vote(models.Model):
     vote_message = models.ForeignKey(VoteMessage, on_delete=models.CASCADE)
     voter = models.ForeignKey(User)
-    vote = models.NullBooleanField(default=False, null=True)
+    vote = models.NullBooleanField(default=None, null=True)
+    subscribed = models.BooleanField(default=True)
         
     def __unicode__(self):
-        return "A poll by " + str(self.voter) + " for '" + str(self.vote_message) + "'"
+        return "A vote by " + str(self.voter) + " for '" + str(self.vote_message) + "'"
