@@ -172,6 +172,9 @@ class VoteMessage(models.Model):
     coinCost = models.IntegerField(default=0)
     globalSong = models.ForeignKey(GlobalSong, null=True, blank=True)
     
+    def __unicode__(self):
+        return "A poll by " + str(self.owner) + " to " + str(self.action) + " for " + str(self.coinCost) + " coins"
+    
 class Vote(models.Model):
     vote_message = models.ForeignKey(VoteMessage)
     voter = models.ForeignKey(User)
