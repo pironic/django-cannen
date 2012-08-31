@@ -124,9 +124,9 @@ def info(request):
              
         leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs, bestSongs=bestSongs, worstSongs=worstSongs)
         
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
     else: #return the default values without library
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library, polls=pollData)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
