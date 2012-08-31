@@ -20,23 +20,15 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.template import RequestContext
 from django.conf import settings
-<<<<<<< HEAD
 from django.db.models import F # https://docs.djangoproject.com/en/dev/ref/models/instances/?from=olddocs#how-django-knows-to-update-vs-insert
 from django.core.cache import cache
 import backend
-from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file
+from django.db.models import Count
+from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file, VoteMessage, Vote
 from django.contrib.auth.models import User
-
 
 import urllib, urllib2, httplib, sys
 from xml.dom.minidom import parse, parseString
-=======
-from django.db.models import Count
-
-import backend
-import cannen.backend
-from .models import UserSong, GlobalSong, SongFile, add_song_and_file, VoteMessage, Vote
->>>>>>> voting
 
 @login_required
 def index(request):
@@ -63,7 +55,6 @@ def info(request):
     userqueue = UserSong.objects.filter(owner=request.user)
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
     
-<<<<<<< HEAD
     #if we're playing, we need to populate the rating objects for the info page based on current song.
     if(now_playing != None):
         #populate the self rate info, in order to show the proper rating icons.
@@ -86,7 +77,6 @@ def info(request):
         rateSelf = 'X'
         songScore = 0
         
-=======
     vote_messages = VoteMessage.objects.exclude(vote__voter=request.user, vote__subscribed=False)#.annotate(myVote='vote__vote')
     pollData = []
     for vote_message in vote_messages:
@@ -101,13 +91,11 @@ def info(request):
         pollData.append(dict(poll=vote_message,vote=user_vote,stats=stats))
     
 
->>>>>>> voting
     #if the library is enabled, then prepare the data and pass it to the template
     if enable_library:
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
-<<<<<<< HEAD
         
         #filter out the shuffle user.
         shuffle_user = None
@@ -136,14 +124,9 @@ def info(request):
              
         leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs, bestSongs=bestSongs, worstSongs=worstSongs)
         
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, leaderboard=leaderboard)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData)
     else: #return the default values without library
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library)
-=======
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, library=userlibrary, enable_library=enable_library, polls=pollData)
-    else: #return the default values without library
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, enable_library=enable_library, polls=pollData)
->>>>>>> voting
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library, polls=pollData)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -267,7 +250,6 @@ def play(request, url):
     return HttpResponseRedirect(reverse('cannen.views.index'))
     
 @login_required
-<<<<<<< HEAD
 def trash(request, songid, admin=None):
     if songid == '':
         raise ValidationError("invalid track")
@@ -366,7 +348,8 @@ def rate(request, action, songid):
         nowPlayingRate.save()
     else:
         nowPlayingRate.delete()
-=======
+    return HttpResponseRedirect(reverse('cannen.views.index'))
+
 def poll(request, action, songid=None):
     
     if songid and action == 'skip':
@@ -426,5 +409,4 @@ def vote(request, action, pollid):
         vote_message.delete()
     
     #raise ValidationError("not built yet. rawr.")
->>>>>>> voting
     return HttpResponseRedirect(reverse('cannen.views.index'))
