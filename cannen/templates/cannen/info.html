@@ -211,6 +211,43 @@
       </li>
       {% endfor %}      
     </ul>
+    <ul class="nav nav-list">
+      <li class="nav-header">
+        <i class="icon-volume-off"></i> Worst Songs
+      </li>
+    </ul>
+    <ul id="not-sortable" class="nav nav-list">
+      {% for song in leaderboard.worstSongs %}
+      <li class="context-container" id="leaderboard-bestsong-{{ song.tags.model.id }}">
+        <span class="context">
+          <a href="#trash-{{ song.tags.model.id }}" data-toggle="modal"><i class="icon-trash"></i></a><!--
+          <div class="modal" id="trash-{{ song.tags.model.id }}" tabindex="-1" >
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                <h3 id="myModalLabel-{{ song.tags.model.id }}">Trashing {{ song.tags.title }} - {{ song.tags.artist }}</h3>
+            </div>
+            <div class="modal-body">
+                <p>Removing this item from the library will cost you <i class="icon-leaf"></i>10 leaves. Are you okay with that?</p>
+                <span class="badge"> {{ song.rates.score }}</span>
+                <span class="title">{{ song.tags.title }}</span>
+                <span class="subtitle">{{ song.tags.artist }}</span>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Nevermind</button>
+                <a href="{% url 'cannen.views.trash' song.rates.id %}" class="btn btn-primary">Spend 'em</a>
+                <a href="{% url 'cannen.views.trash' song.rates.id 'admin' %}" class="btn btn-info">Abuse Admin Powers</a>
+            </div>
+          </div>-->
+          <!--<a href="{% url 'cannen.views.trash' song.rates.id %}" class="asynclink">
+            <i class="icon-trash"></i>
+          </a>-->
+        </span>
+        <span class="badge"> {{ song.rates.score }}</span>
+        <span class="title">{{ song.tags.title }}</span>
+        <span class="subtitle">{{ song.tags.artist }}</span>
+      </li>
+      {% endfor %}      
+    </ul>
   </div>
   {% endif %}
 </div>

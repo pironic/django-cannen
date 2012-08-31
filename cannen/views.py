@@ -99,8 +99,16 @@ def info(request):
                 bestSongs.append(dict(tags=CANNEN_BACKEND.get_info(songFile),rates=bestSongRates[n]))
             else:
                 bestSongs.append(dict(tags=dict(title=bestSongRates[n]),rates=bestSongRates[n]))
+        worstSongRates = SongFileScore.objects.order_by('score')[:5]
+        worstSongs = []
+        for n in range(0,5):
+            songFile = SongFile.objects.filter(file=worstSongRates[n].url)[0]
+            if songFile:
+                worstSongs.append(dict(tags=CANNEN_BACKEND.get_info(songFile),rates=worstSongRates[n]))
+            else:
+                worstSongs.append(dict(tags=dict(title=worstSongRates[n]),rates=worstSongRates[n]))
              
-        leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs, bestSongs=bestSongs)
+        leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs, bestSongs=bestSongs, worstSongs=worstSongs)
         
         data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, leaderboard=leaderboard)
     else: #return the default values without library
@@ -225,6 +233,17 @@ def play(request, url):
     if url == '':
         raise ValidationError("invalid track")
     UserSong(owner=request.user, url=url).save()
+    return HttpResponseRedirect(reverse('cannen.views.index'))
+    
+@login_required
+def trash(request, songid, admin=None):
+    if songid == '':
+        raise ValidationError("invalid track")
+    songFileScore = SongFileScore.objects.get(id=songid)
+    if not(songFileScore):
+        raise ValidationError("invalid track")
+    
+    songFileScore.save()
     return HttpResponseRedirect(reverse('cannen.views.index'))
     
 @login_required

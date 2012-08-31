@@ -137,13 +137,14 @@ $(document).ready(
 				},
 				progress: function (e, data)
 				{
-					var progress = parseInt(data.loaded / data.total * 100, 10);
+					var intProgress = parseInt(data.loaded / data.total * 100, 10);
+					console.log(intProgress);
 					if (data.context.progress){
-						data.context.progress.animate({width: progress + '%'});
+						data.context.progress.animate({width: intProgress + '%'});
 						enableBeforeUnload();
                         }
 					if (data.context.status)
-						data.context.status.text(progress + '%');
+						data.context.status.text(intProgress + '%');
 				},
 				always: function (e, data)
 				{
