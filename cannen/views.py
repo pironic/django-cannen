@@ -117,6 +117,8 @@ def navbarinfo(request):
           
         listeners = cache.get('listeners')
         
+    if not listeners:
+        strCurrentListeners = "No Current Listeners"
     if (listeners == 1):
         strCurrentListeners = "1 Current Listener"
     else:
