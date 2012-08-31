@@ -35,6 +35,21 @@
   </div>
 </div>
 
+{% if polls %}
+
+{% for poll in polls %}
+<div class="alert alert-info">
+  <a href="{% url 'cannen.views.vote' 'n' poll.id %}" class="close asynclink" data-dismiss="alert">×</a>
+  <h4>{{ poll.owner }} would like to {{ poll.action }}{%if poll.globalSong %} {{ poll.globalSong }}{% endif %}</h4>
+  {% if poll.coinCostOwner > 0 %}If this vote passes then {{ poll.owner }} will be required to spend <i class="icon-leaf"></i>{{ poll.coinCostOwner }}. {% endif %}Do you support them?<br/>
+  {% if poll.coinCostAgree > 0 %}<b>To agree with this poll it will cost you <i class="icon-leaf"></i>{{ poll.coinCostAgree }}</b>. Leaves will only be charged if this poll succeeds.<br/>{% endif %}
+  {% if poll.coinCostDisagree > 0 %}<b>To disagree with this poll it will cost you <i class="icon-leaf"></i>{{ poll.coinCostDisagree }}</b>. Leaves will only be charged if this poll fails.<br/>{% endif %}
+  <a href="{% url 'cannen.views.vote' 't' poll.id %}" class="btn btn-mini asynclink" data-dismiss="alert"><i class="icon-thumbs-up"></i></a>
+  <a href="{% url 'cannen.views.vote' 'f' poll.id %}" class="btn btn-mini asynclink" data-dismiss="alert"><i class="icon-thumbs-down"></i></a>
+</div>
+{% endfor %}
+{% endif %}
+
 <div class="row">
   <!-- the queues -->
   <div class="span8" id="main-queue">

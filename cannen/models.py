@@ -169,13 +169,15 @@ def global_song_delete(sender, **kwargs):
 class VoteMessage(models.Model):
     action = models.CharField(max_length=200)
     owner = models.ForeignKey(User)
-    coinCost = models.IntegerField(default=0)
-    globalSong = models.ForeignKey(GlobalSong, null=True, blank=True)
+    coinCostOwner = models.IntegerField(default=0)
+    coinCostAgree = models.IntegerField(default=0)
+    coinCostDisagree = models.IntegerField(default=0)
+    globalSong = models.ForeignKey(GlobalSong, null=True, blank=True, on_delete=models.CASCADE)
     
     def __unicode__(self):
-        return "A poll by " + str(self.owner) + " to " + str(self.action) + " for " + str(self.coinCost) + " coins"
+        return "A poll by " + str(self.owner) + " to " + str(self.action) + " for " + str(self.coinCostOwner) + " coins"
     
 class Vote(models.Model):
-    vote_message = models.ForeignKey(VoteMessage)
+    vote_message = models.ForeignKey(VoteMessage, on_delete=models.CASCADE)
     voter = models.ForeignKey(User)
-    vote = models.BooleanField(default=False, null=False)
+    vote = models.NullBooleanField(default=False, null=True)

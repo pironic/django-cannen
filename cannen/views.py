@@ -22,7 +22,7 @@ from django.template import RequestContext
 from django.conf import settings
 
 import backend
-from .models import UserSong, GlobalSong, SongFile, add_song_and_file
+from .models import UserSong, GlobalSong, SongFile, add_song_and_file, VoteMessage, Vote
 
 @login_required
 def index(request):
@@ -47,16 +47,17 @@ def info(request):
 
     userqueue = UserSong.objects.filter(owner=request.user)
     userqueue = [CANNEN_BACKEND.get_info(m) for m in userqueue]
-
-    #return the default values without library
-    data = dict(current=now_playing, playlist=playlist, queue=userqueue, enable_library=enable_library)
     
+    polls = VoteMessage.objects.exclude(vote__voter=request.user)
+
     #if the library is enabled, then prepare the data and pass it to the template
     if enable_library:
         songfiles = SongFile.objects.filter(owner=request.user)
         userlibrary = [CANNEN_BACKEND.get_info(Song) for Song in songfiles]
         userlibrary.sort(key=lambda x: (x.artist.lower().lstrip('the ') if x.artist else x.artist, x.title))
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, library=userlibrary, enable_library=enable_library)
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, library=userlibrary, enable_library=enable_library, polls=polls)
+    else: #return the default values without library
+        data = dict(current=now_playing, playlist=playlist, queue=userqueue, enable_library=enable_library, polls=polls)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -122,4 +123,9 @@ def play(request, url):
     if url == '':
         raise ValidationError("invalid track")
     UserSong(owner=request.user, url=url).save()
+    return HttpResponseRedirect(reverse('cannen.views.index'))
+    
+@login_required
+def vote(request, action, pollid):
+    raise ValidationError("not built yet. rawr.")
     return HttpResponseRedirect(reverse('cannen.views.index'))

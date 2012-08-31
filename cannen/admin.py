@@ -13,7 +13,7 @@ admin.site.register(SongFile, SongFileAdmin)
 admin.site.register(UserSong)
 admin.site.register(GlobalSong)
 class VoteMessageAdmin(admin.ModelAdmin):
-    fields = ['action', 'owner', 'coinCost','globalSong']
+    fields = ['action', 'owner', 'coinCostOwner', 'coinCostAgree', 'coinCostDisagree', 'globalSong']
     list_filter = ['action']
 admin.site.register(VoteMessage, VoteMessageAdmin)
 class VoteAdmin(admin.ModelAdmin):

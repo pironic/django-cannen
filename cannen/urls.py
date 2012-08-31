@@ -16,6 +16,7 @@
 from django.conf.urls.defaults import patterns, include, url
 
 urlpatterns = patterns('cannen.views',
+    url(r'^vote/(n|t|f)/(\d+)$', 'vote'),
     url(r'^add/url$', 'add_url'),
     url(r'^add/file$', 'add_file'),
     url(r'^delete/(\d+)$', 'delete'),
