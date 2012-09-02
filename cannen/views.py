@@ -23,6 +23,7 @@ from django.conf import settings
 from django.db.models import F # https://docs.djangoproject.com/en/dev/ref/models/instances/?from=olddocs#how-django-knows-to-update-vs-insert
 from django.core.cache import cache
 import backend
+import cannen.backend
 from django.db.models import Count
 from .models import UserSong, GlobalSong, SongFile, SongFileScore, UserProfile, GlobalSongRate, add_song_and_file, VoteMessage, Vote
 from django.contrib.auth.models import User
