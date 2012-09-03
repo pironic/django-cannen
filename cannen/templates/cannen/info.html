@@ -46,10 +46,20 @@
         </a>
         {% endif %}
       </div>
+      <script type="text/javascript">
+        $(document).ready(function() {
+          document.title = '{{ current.title }}';
+        });
+      </script>
       <div class="title">
         {{ current.title }}
       </div>
       {% if current.artist %}
+      <script type="text/javascript">
+        $(document).ready(function() {
+          document.title = document.title + ' - {{ current.artist }}';
+        });
+      </script>
       <div class="subtitle">
         by {{ current.artist }}
       </div>
@@ -58,11 +68,27 @@
         queued by <span class="label">{{ current.model.submitter.username }}</span>
       </div>
       {% if current.time %}
+      <script type="text/javascript">
+        $(document).ready(function() {
+          document.title = document.title + ' ({{ current.elapsed }} / {{ current.time }})';
+        });
+      </script>
       <div class="time">
-        time: {{ current.elapsed }} / {{ current.time }}
+        time: {{ current.elapsed }} / {{ current.time }} 
       </div>
       {% endif %}
+      <div class="btn-group">
+          <script>$('#skipTool').tooltip()</script>
+          <a href="{% url 'cannen.views.poll' 'skip' current.model.id %}" id="skipTool" class="btn btn-mini asynclink" rel="tooltip" data-animation='false' data-placement='bottom' title="Initiate a vote to skip this song">
+            <i class="icon-fast-forward"></i>
+          </a>
+      </div>
       {% else %}
+      <script type="text/javascript">
+        $(document).ready(function() {
+          document.title = 'nothing is playing';
+        });
+      </script>
       <div class="title">
         nothing is playing
       </div>
@@ -77,10 +103,35 @@
   </div>
 </div>
 
+{% if polls %}
+{% for d in polls %}
+<div class="alert {% if d.vote.vote != None and d.vote.vote %}alert-success{% elif d.vote.vote != None and not d.vote.vote  %}alert-error{% else %}alert-info{% endif %}">
+  <a href="{% url 'cannen.views.vote' 'n' d.poll.id %}" class="close asynclink" data-dismiss="alert">×</a>
+  <h4>{{ d.poll.owner }} would like to {{ d.poll.action }}{%if d.poll.globalSong %} {{ d.poll.globalSong }}{% endif %}</h4>
+  {% if d.poll.coinCostOwner > 0 %}If this vote passes then {{ d.poll.owner }} will be required to spend <i class="icon-leaf"></i>{{ d.poll.coinCostOwner }}. {% endif %}Do you support them?<br/>
+  {% if d.poll.coinCostAgree > 0 %}<b>To agree with this poll it will cost you <i class="icon-leaf"></i>{{ d.poll.coinCostAgree }}</b>. Leaves will only be charged when the required votes are met.<br/>{% endif %}
+  {% if d.poll.coinCostDisagree > 0 %}<b>To disagree with this poll it will cost you <i class="icon-leaf"></i>{{ d.poll.coinCostDisagree }}</b>. Leaves will only be charged when the required votes are met.<br/>{% endif %}
+  <a href="{% url 'cannen.views.vote' 't' d.poll.id %}"
+    class="btn btn-mini asynclink{% if d.vote.vote != None and d.vote.vote %} active{% endif %}" data-dismiss="alert">
+      <i class="icon-thumbs-up"></i>
+  </a>
+  <a href="{% url 'cannen.views.vote' 'f' d.poll.id %}" 
+    class="btn btn-mini asynclink{% if d.vote.vote != None and not d.vote.vote %} active{% endif %}" data-dismiss="alert">
+      <i class="icon-thumbs-down"></i>
+  </a>
+  {% if d.stats %}
+    {{ d.stats.total }} of {{ d.stats.required }} votes required of which {{ d.stats.requiredYes }} have to be in favor.
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
 <div class="row">
   <!-- the queues -->
-  <div class="span8" id="main-queue">
-    <h2>coming up</h2>
+  <div class="span12" id="main-queue">
+    <h2>coming up</h2>      
+    
+
     {% if playlist %}
     <ul class="unstyled">
       {% for song in playlist %}
