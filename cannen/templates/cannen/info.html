@@ -108,7 +108,17 @@
 {% if d.vote.vote = None %}
 <script type="text/javascript">
   $(document).ready(function() {
-    document.title = 'New Poll!';
+    var titleText=document.title;
+    var flash=true;
+    var a=function(){
+      document.title=titleText;
+      if flash{setTimeout(b,500);}
+    }
+    var b=function(){
+      document.title="New Poll!";
+      if flash{setTimeout(a,500);}
+    }
+    b();
   });
 </script>
 {% endif %}

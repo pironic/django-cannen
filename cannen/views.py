@@ -250,6 +250,16 @@ def add_file(request):
 def play(request, url):
     if url == '':
         raise ValidationError("invalid track")
+    #check for existing song
+    inUserList = None
+    inGlobalList = None
+    try:
+        inUserList = UserSong.objects.filter(url=url)
+        inGlobalList = GlobalSongs.objects.filter(url=url)
+    except: 
+        carryon=True #carry on
+    if inUserList or inGlobalList:
+        raise ValidationError("Song has already been queued")
     UserSong(owner=request.user, url=url).save()
     return HttpResponseRedirect(reverse('cannen.views.index'))
     
