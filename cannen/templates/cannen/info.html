@@ -103,37 +103,38 @@
   </div>
 </div>
 
-{% if polls %}
+
+
 {% for d in polls %}
-{% if d.vote.vote = None %}
+<!-- poll alert script -->
 <script type="text/javascript">
   $(document).ready(function() {
-    var titleText=document.title;
-    var flash=true;
-    var a=function(){
-      document.title=titleText;
-      if flash{setTimeout(b,500);}
+    flash=false;
+    function a(){
+      if(document.title=="New Poll!")
+        document.title=" - - - - - - - - - - ";
+      setTimeout(b,500);
     }
-    var b=function(){
-      document.title="New Poll!";
-      if flash{setTimeout(a,500);}
+    function b(){
+      if (flash) { document.title="New Poll!"; }
+      setTimeout(a,500);
     }
     b();
+    {% if d.vote.vote = None %}flash=true;{% endif %}
   });
 </script>
-{% endif %}
 <div class="alert {% if d.vote.vote != None and d.vote.vote %}alert-success{% elif d.vote.vote != None and not d.vote.vote  %}alert-error{% else %}alert-info{% endif %}">
-  <a href="{% url 'cannen.views.vote' 'n' d.poll.id %}" class="close asynclink" data-dismiss="alert">×</a>
-  {% if d.poll.owner == request.user %}<a href="{% url 'cannen.views.poll' 'admin' d.poll.id 'trash' %}" class="close asynclink" data-dismiss="alert"><icon class="icon-trash"></i></a>{% endif %}
+  <a href="{% url 'cannen.views.vote' 'n' d.poll.id %}" onClick="flash=false;" class="close asynclink" data-dismiss="alert">×</a>
+  {% if d.poll.owner == request.user %}<a href="{% url 'cannen.views.poll' 'admin' d.poll.id 'trash' %}" onClick="flash=false;" class="close asynclink" data-dismiss="alert"><icon class="icon-trash"></i></a>{% endif %}
   <h4>{{ d.poll.owner }} would like to {{ d.poll.action }}{%if d.poll.globalSong %} {{ d.poll.globalSong }}{% endif %}</h4>
   {% if d.poll.coinCostOwner > 0 %}If this vote passes then {{ d.poll.owner }} will be required to spend <i class="icon-leaf"></i>{{ d.poll.coinCostOwner }}. {% endif %}Do you support them?<br/>
   {% if d.poll.coinCostAgree > 0 %}<b>To agree with this poll it will cost you <i class="icon-leaf"></i>{{ d.poll.coinCostAgree }}</b>. Leaves will only be charged when the required votes are met.<br/>{% endif %}
   {% if d.poll.coinCostDisagree > 0 %}<b>To disagree with this poll it will cost you <i class="icon-leaf"></i>{{ d.poll.coinCostDisagree }}</b>. Leaves will only be charged when the required votes are met.<br/>{% endif %}
-  <a href="{% url 'cannen.views.vote' 't' d.poll.id %}"
+  <a href="{% url 'cannen.views.vote' 't' d.poll.id %}" onClick="flash=false;" 
     class="btn btn-mini asynclink{% if d.vote.vote != None and d.vote.vote %} active{% endif %}" data-dismiss="alert">
       <i class="icon-thumbs-up"></i>
   </a>
-  <a href="{% url 'cannen.views.vote' 'f' d.poll.id %}" 
+  <a href="{% url 'cannen.views.vote' 'f' d.poll.id %}" onClick="flash=false;" 
     class="btn btn-mini asynclink{% if d.vote.vote != None and not d.vote.vote %} active{% endif %}" data-dismiss="alert">
       <i class="icon-thumbs-down"></i>
   </a>
@@ -142,7 +143,6 @@
   {% endif %}
 </div>
 {% endfor %}
-{% endif %}
 
 <div class="row">
   <!-- the queues -->

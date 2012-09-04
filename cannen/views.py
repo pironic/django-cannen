@@ -86,7 +86,7 @@ def info(request):
         except IndexError: #nope, lets make a new instance to save it.
             user_vote = Vote(voter=request.user, vote_message=vote_message, vote=None)
         if cache.get('listeners'):      
-            requiredVotes = int(round(int(cache.get('listeners')) * 0.80,0))
+            requiredVotes = int(round(int(cache.get('listeners')) * 0.90,0))
         else:
             requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
         requiredVotesYes = int(round(requiredVotes * getattr(settings, 'CANNEN_VOTES_SUCCESS_RATIO', 0.6),0))
@@ -374,6 +374,7 @@ def poll(request, action, id=None, adminAction=None):
             vote_message = VoteMessage.objects.filter(owner=request.user, action=action, globalSong=globalSong)[0]
         except IndexError: #nope, lets make a new instance to save it.
             vote_message = VoteMessage(owner=request.user, action=action,globalSong=globalSong)
+        vote_message.coinCostAgree = 1
         
         vote_message.save()
     #else:
@@ -405,7 +406,7 @@ def vote(request, action, pollid):
     user_vote.save()
         
     if cache.get('listeners'):      
-        requiredVotes = int(round(int(cache.get('listeners')) * 0.80,0))
+        requiredVotes = int(round(int(cache.get('listeners')) * 0.90,0))
     else:
         requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
     totalVotes = Vote.objects.filter(vote_message=vote_message).exclude(vote=None).count()
@@ -420,6 +421,12 @@ def vote(request, action, pollid):
             else: #its a valid song, lets skip it.
                 backend = cannen.backend.get()
                 backend.stop()
+                #charge the people's for the poll
+                voters = Vote.objects.filter(vote_message=vote_message,vote=True)
+                for voter in voters:
+                    voter_profile = UserProfile.objects.filter(user=voter)[0]
+                    voter_profile.coinsSpent = voter_profile.coinsSpent + 1
+                    voter_profile.save()
         else:
             raise ValidationError("Poll complete but no method built for this action<br/>votesFor: "+str(votesFor)+"<br/>votesAgainst:"+str(totalVotes-votesFor)+"<br/>")
     elif totalVotes >= requiredVotes: #failure on the poll. remove it.
