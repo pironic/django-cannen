@@ -107,6 +107,7 @@
 {% for d in polls %}
 <div class="alert {% if d.vote.vote != None and d.vote.vote %}alert-success{% elif d.vote.vote != None and not d.vote.vote  %}alert-error{% else %}alert-info{% endif %}">
   <a href="{% url 'cannen.views.vote' 'n' d.poll.id %}" class="close asynclink" data-dismiss="alert">×</a>
+  {% if d.poll.owner == request.user %}<a href="{% url 'cannen.views.poll' 'admin' d.poll.id 'trash' %}" class="close asynclink" data-dismiss="alert"><icon class="icon-trash"></i></a>{% endif %}
   <h4>{{ d.poll.owner }} would like to {{ d.poll.action }}{%if d.poll.globalSong %} {{ d.poll.globalSong }}{% endif %}</h4>
   {% if d.poll.coinCostOwner > 0 %}If this vote passes then {{ d.poll.owner }} will be required to spend <i class="icon-leaf"></i>{{ d.poll.coinCostOwner }}. {% endif %}Do you support them?<br/>
   {% if d.poll.coinCostAgree > 0 %}<b>To agree with this poll it will cost you <i class="icon-leaf"></i>{{ d.poll.coinCostAgree }}</b>. Leaves will only be charged when the required votes are met.<br/>{% endif %}
@@ -192,10 +193,6 @@
           <a href="{% url 'cannen.views.delete' song.model.id %}" class="asynclink">
             <i class="icon-remove"></i>
           </a>
-          <!-- unused movement
-            <a href="{% url 'cannen.views.move' song.model.id -1 %}" class="asynclink">^</a>
-            <a href="{% url 'cannen.views.move' song.model.id +1 %}" class="asynclink">v</a>
-          -->
         </span>
         <span class="title">{{ song.title }}</span>
         {% if song.artist %}
@@ -271,27 +268,7 @@
       {% for song in leaderboard.worstSongs %}
       <li class="context-container" id="leaderboard-bestsong-{{ song.tags.model.id }}">
         <span class="context">
-          <a href="#trash-{{ song.tags.model.id }}" data-toggle="modal"><i class="icon-trash"></i></a><!--
-          <div class="modal" id="trash-{{ song.tags.model.id }}" tabindex="-1" >
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                <h3 id="myModalLabel-{{ song.tags.model.id }}">Trashing {{ song.tags.title }} - {{ song.tags.artist }}</h3>
-            </div>
-            <div class="modal-body">
-                <p>Removing this item from the library will cost you <i class="icon-leaf"></i>10 leaves. Are you okay with that?</p>
-                <span class="badge"> {{ song.rates.score }}</span>
-                <span class="title">{{ song.tags.title }}</span>
-                <span class="subtitle">{{ song.tags.artist }}</span>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Nevermind</button>
-                <a href="{% url 'cannen.views.trash' song.rates.id %}" class="btn btn-primary">Spend 'em</a>
-                <a href="{% url 'cannen.views.trash' song.rates.id 'admin' %}" class="btn btn-info">Abuse Admin Powers</a>
-            </div>
-          </div>-->
-          <!--<a href="{% url 'cannen.views.trash' song.rates.id %}" class="asynclink">
-            <i class="icon-trash"></i>
-          </a>-->
+          <a href="{% url 'cannen.views.poll' 'trash' song.tags.model.id %}" data-toggle="modal" class="asynclink"><i class="icon-trash"></i></a>
         </span>
         <span class="badge"> {{ song.rates.score }}</span>
         <span class="title">{{ song.tags.title }}</span>

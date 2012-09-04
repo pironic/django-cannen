@@ -125,9 +125,9 @@ def info(request):
              
         leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs, bestSongs=bestSongs, worstSongs=worstSongs)
         
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
+        data = dict(request=request, current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
     else: #return the default values without library
-        data = dict(current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
+        data = dict(request=request, current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
 
     return render_to_response('cannen/info.html', data,
                               context_instance=RequestContext(request))
@@ -251,17 +251,6 @@ def play(request, url):
     return HttpResponseRedirect(reverse('cannen.views.index'))
     
 @login_required
-def trash(request, songid, admin=None):
-    if songid == '':
-        raise ValidationError("invalid track")
-    songFileScore = SongFileScore.objects.get(id=songid)
-    if not(songFileScore):
-        raise ValidationError("invalid track")
-    
-    songFileScore.save()
-    return HttpResponseRedirect(reverse('cannen.views.index'))
-    
-@login_required
 def rate(request, action, songid):
     #data validation, even though this would liekly never ever be called.
     if action == '':
@@ -351,11 +340,20 @@ def rate(request, action, songid):
         nowPlayingRate.delete()
     return HttpResponseRedirect(reverse('cannen.views.index'))
 
-def poll(request, action, songid=None):
-    
-    if songid and action == 'skip':
+def poll(request, action, id=None, adminAction=None):
+   
+    if id and adminAction and action == 'admin':
+        try: #existing poll?
+            vote_message = VoteMessage.objects.filter(owner=request.user, id=id)[0]
+        except IndexError: #nope, lets make a new instance to save it.
+            raise ValidationError("Invalid id speicfied, or you are not the owner of this poll.")
+        
+        if adminAction == 'trash':
+            vote_message.delete()
+        
+    elif id and action == 'skip':
         try:#try to load the globalSong that is referenced for skipping
-            globalSong = GlobalSong.objects.get(id=songid)
+            globalSong = GlobalSong.objects.get(id=id)
         except IndexError: 
             raise ValidationError("Invalid song speicfied to skip.")
             
