@@ -85,7 +85,10 @@ def info(request):
             user_vote = Vote.objects.filter(voter=request.user, vote_message=vote_message)[0]
         except IndexError: #nope, lets make a new instance to save it.
             user_vote = Vote(voter=request.user, vote_message=vote_message, vote=None)
-        requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
+        if cache.get('listeners'):      
+            requiredVotes = int(round(int(cache.get('listeners')) * 0.80,0))
+        else:
+            requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
         requiredVotesYes = int(round(requiredVotes * getattr(settings, 'CANNEN_VOTES_SUCCESS_RATIO', 0.6),0))
         totalVotes = Vote.objects.filter(vote_message=vote_message).exclude(vote=None).count()
         stats = dict(required=requiredVotes,requiredYes=requiredVotesYes,total=totalVotes)
@@ -391,10 +394,15 @@ def vote(request, action, pollid):
     
     user_vote.save()
         
-    requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
+    if cache.get('listeners'):      
+        requiredVotes = int(round(int(cache.get('listeners')) * 0.80,0))
+    else:
+        requiredVotes = getattr(settings, 'CANNEN_VOTES_REQUIRED', 5)
     totalVotes = Vote.objects.filter(vote_message=vote_message).exclude(vote=None).count()
     votesFor = Vote.objects.filter(vote_message=vote_message,vote=True).count()
     votesNeededYes = int(round(requiredVotes * getattr(settings, 'CANNEN_VOTES_SUCCESS_RATIO', 0.6),0))
+    if votesNeededYes < 1:
+        votesNeededYes = 1
     if votesFor >= votesNeededYes: #success, pass the poll, then remove it.
         if(vote_message.action == 'skip'): #skip method
             if not vote_message.globalSong:

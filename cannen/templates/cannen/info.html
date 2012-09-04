@@ -105,6 +105,13 @@
 
 {% if polls %}
 {% for d in polls %}
+{% if d.vote.vote = None %}
+<script type="text/javascript">
+  $(document).ready(function() {
+    document.title = 'New Poll!';
+  });
+</script>
+{% endif %}
 <div class="alert {% if d.vote.vote != None and d.vote.vote %}alert-success{% elif d.vote.vote != None and not d.vote.vote  %}alert-error{% else %}alert-info{% endif %}">
   <a href="{% url 'cannen.views.vote' 'n' d.poll.id %}" class="close asynclink" data-dismiss="alert">×</a>
   {% if d.poll.owner == request.user %}<a href="{% url 'cannen.views.poll' 'admin' d.poll.id 'trash' %}" class="close asynclink" data-dismiss="alert"><icon class="icon-trash"></i></a>{% endif %}
