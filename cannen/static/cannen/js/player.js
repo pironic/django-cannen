@@ -139,9 +139,10 @@ $(document).ready(
 				progress: function (e, data)
 				{
 					var intProgress = parseInt(data.loaded / data.total * 100, 10);
-					console.log(intProgress);
 					if (data.context.progress){
-						data.context.progress.animate({width: intProgress + '%'});
+						//query 1.8 currently has a bug in it, commented out until jquery-core is fixed and updated.
+						//data.context.progress.animate({width: intProgress + '%'});
+						data.context.progress.css('width', intProgress + '%');
 						enableBeforeUnload();
                         }
 					if (data.context.status)
