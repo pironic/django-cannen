@@ -422,14 +422,30 @@ def vote(request, action, pollid):
                 backend = cannen.backend.get()
                 backend.stop()
                 #charge the people's for the poll
-                voters = Vote.objects.filter(vote_message=vote_message,vote=True)
-                for voter in voters:
+				
+				#charge the owner, for starting it.
+				poll_creator = UserProfile.objects.filter(user=vote_message.owner)[0]
+				poll_creator.coinsSpent = poll_creator.coinsSpent + vote_message.coinCostOwner
+				poll_creator.save()
+				#charge the people who agree
+                votersAgree = Vote.objects.filter(vote_message=vote_message,vote=True)
+                for voter in votersAgree:
                     voter_profile = UserProfile.objects.filter(user=voter)[0]
-                    voter_profile.coinsSpent = voter_profile.coinsSpent + 1
+					voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostAgree
                     voter_profile.save()
         else:
             raise ValidationError("Poll complete but no method built for this action<br/>votesFor: "+str(votesFor)+"<br/>votesAgainst:"+str(totalVotes-votesFor)+"<br/>")
     elif totalVotes >= requiredVotes: #failure on the poll. remove it.
+		#charge the owner, for starting it.
+		#voter_profile = UserProfile.objects.filter(user=voter)[0]
+		#voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostOwner
+
+		#charge the people who disagree
+		votersDisagree = Vote.objects.filter(vote_message=vote_message,vote=False)
+		for voter in votersDisagree:
+			voter_profile = UserProfile.objects.filter(user=voter)[0]
+			voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostDisagree
+			voter_profile.save()
         vote_message.delete()
     
     #raise ValidationError("not built yet. rawr.")
