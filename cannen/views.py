@@ -128,7 +128,23 @@ def info(request):
              
         leaderboard = dict(bestDJs=bestDJs, worstDJs=worstDJs, bestSongs=bestSongs, worstSongs=worstSongs)
         
-        data = dict(request=request, current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
+        # one of the following conditions has to be met in order to be able to skip the song, so only show the control if one of these are met.
+        # their own song = allowed
+        # queued by AutoShuffle = allowed
+        # has a score of -2 or lower = allowed.
+        if (globalSong.submitter == request.user or 
+                (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) 
+                    and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0))
+            ): #that's fine, any user can skip their own music... 
+            skip = True
+        else:
+            if (songScore > -2):
+                if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
+                    skip = True
+                else:
+                    skip = False
+        
+        data = dict(request=request, current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData, leaderboard=leaderboard, skip=skip)
     else: #return the default values without library
         data = dict(request=request, current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, enable_library=enable_library, polls=pollData, leaderboard=leaderboard)
 
@@ -376,6 +392,36 @@ def poll(request, action, id=None, adminAction=None):
             vote_message = VoteMessage(owner=request.user, action=action,globalSong=globalSong)
         vote_message.coinCostAgree = 1
         
+        # one of the following conditions has to be met in order to be able to skip the song.
+        # their own song = allowed
+        # queued by AutoShuffle = allowed
+        # has a score of -2 or lower = allowed.
+        if (globalSong.submitter == request.user or 
+                (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) 
+                    and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0))
+            ): #that's fine, any user can skip their own music... for free
+            vote_message.CoinCostOwner = 0
+            vote_message.CoinCostAgree = 0
+            vote_message.CoinCostDisagree = 0
+        else:
+            songScore = 0
+            try: #check for rating, if its not <-2 then dont allow skipping
+                songScore = SongFileScore.objects.filter(url=globalSong.url)[0].score
+            except IndexError: #not rated, that's fine...
+                pass
+            if (songScore > -2):
+                if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
+                    pass #if its queued by the AutoShuffle user, then always allow it to be skipped.
+                else:
+                    raise ValidationError("Sorry, we can't skip a song that hasnt been played, or has a score of -1 or higher.")
+            
+            if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
+                vote_message.CoinCostOwner = 0
+                vote_message.CoinCostAgree = 0
+                vote_message.CoinCostDisagree = 0
+            else:
+                vote_message.CoinCostOwner = 2
+
         vote_message.save()
     #else:
         

@@ -79,7 +79,12 @@
       {% endif %}
       <div class="btn-group">
           <script>$('#skipTool').tooltip()</script>
-          <a href="{% url 'cannen.views.poll' 'skip' current.model.id %}" id="skipTool" class="btn btn-mini asynclink" rel="tooltip" data-animation='false' data-placement='bottom' title="Initiate a vote to skip this song">
+          <a href="{% url 'cannen.views.poll' 'skip' current.model.id %}" id="skipTool" 
+            {% if skip != None and skip %}
+            class="btn btn-mini asynclink" rel="tooltip" data-animation='false' data-placement='bottom' title="Initiate a vote to skip this song"
+            {% else %}
+            class="btn btn-mini asynclink disabled" rel="tooltip" data-animation='false' data-placement='bottom' title="You are unable to skip this song."
+            {% endif %}>
             <i class="icon-fast-forward"></i>
           </a>
       </div>
