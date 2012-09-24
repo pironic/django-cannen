@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.core.management.base import BaseCommand, CommandError
-from cannen.models import UserSong, GlobalSong, SongFile, User
+from cannen.models import UserSong, GlobalSong, SongFile, SongFileScore, User
 from django.conf import settings
 import cannen.backend
 
@@ -49,7 +49,16 @@ class PlaylistManager(object):
                 to_add.delete()
             # queue up a random item into the coming up list if nothing is there, and shuffle is enabled.
             if getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and len(GlobalSong.objects.filter(is_playing=False)) < 1:
-                randomSong = SongFile.objects.order_by('?')[0]
+                songFound = 0
+                while(songFound == 0):
+                    randomSong = SongFile.objects.order_by('?')[0]
+                    #check it's rating, if <0 ... find another one.
+                    try:
+                        randomSongScore = SongFileScore.objects.filter(url=randomSong.url)[0]
+                        if (randomSongScore.Score >= 0):
+                            songFound = 1 # found one with a rating above 0. awesome, exit the loop!
+                    except IndexError:
+                        songFound = 1 #doesnt have a rating, and that's good enough for me! queue it up.
                 global_to_add = GlobalSong.from_song_file(randomSong)
                 global_to_add.save()                
                                 
