@@ -106,7 +106,7 @@
 
 
 {% for d in polls %}
-<!-- poll alert script -->
+<!-- poll alert script
 <script type="text/javascript">
   $(document).ready(function() {
     flash=false;
@@ -122,7 +122,7 @@
     b();
     {% if d.vote.vote = None %}flash=true;{% endif %}
   });
-</script>
+</script> -->
 <div class="alert {% if d.vote.vote != None and d.vote.vote %}alert-success{% elif d.vote.vote != None and not d.vote.vote  %}alert-error{% else %}alert-info{% endif %}">
   <a href="{% url 'cannen.views.vote' 'n' d.poll.id %}" onClick="flash=false;" class="close asynclink" data-dismiss="alert">×</a>
   {% if d.poll.owner == request.user %}<a href="{% url 'cannen.views.poll' 'admin' d.poll.id 'trash' %}" onClick="flash=false;" class="close asynclink" data-dismiss="alert"><icon class="icon-trash"></i></a>{% endif %}
