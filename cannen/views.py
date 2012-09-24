@@ -152,6 +152,13 @@ def poll(request, action, songid=None):
             vote_message = VoteMessage.objects.filter(owner=request.user, action=action, globalSong=globalSong)[0]
         except IndexError: #nope, lets make a new instance to save it.
             vote_message = VoteMessage(owner=request.user, action=action,globalSong=globalSong)
+            
+        if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.Submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
+            vote_message.CoinCostOwner = 0
+            vote_message.CoinCostAgree = 0
+            vote_message.CoinCostDisagree = 0
+        else:
+            vote_message.CoinCostOwner = 2
         
         vote_message.save()
         Vote(voter=request.user, vote_message=vote_message, user_vote.vote = 't').save()
@@ -195,30 +202,30 @@ def vote(request, action, pollid):
                 backend = cannen.backend.get()
                 backend.stop()
                 #charge the people's for the poll
-				
-				#charge the owner, for starting it.
-				poll_creator = UserProfile.objects.filter(user=vote_message.owner)[0]
-				poll_creator.coinsSpent = poll_creator.coinsSpent + vote_message.coinCostOwner
-				poll_creator.save()
-				#charge the people who agree
+                
+                #charge the owner, for starting it.
+                poll_creator = UserProfile.objects.filter(user=vote_message.owner)[0]
+                poll_creator.coinsSpent = poll_creator.coinsSpent + vote_message.coinCostOwner
+                poll_creator.save()
+                #charge the people who agree
                 votersAgree = Vote.objects.filter(vote_message=vote_message,vote=True)
                 for voter in votersAgree:
                     voter_profile = UserProfile.objects.filter(user=voter)[0]
-					voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostAgree
+                    voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostAgree
                     voter_profile.save()
         else:
             raise ValidationError("Poll complete but no method built for this action<br/>votesFor: "+str(votesFor)+"<br/>votesAgainst:"+str(totalVotes-votesFor)+"<br/>")
     elif totalVotes >= requiredVotes: #failure on the poll. remove it.
-		#charge the owner, for starting it.
-		#voter_profile = UserProfile.objects.filter(user=voter)[0]
-		#voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostOwner
+        #charge the owner, for starting it.
+        #voter_profile = UserProfile.objects.filter(user=voter)[0]
+        #voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostOwner
 
-		#charge the people who disagree
-		votersDisagree = Vote.objects.filter(vote_message=vote_message,vote=False)
-		for voter in votersDisagree:
-			voter_profile = UserProfile.objects.filter(user=voter)[0]
-			voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostDisagree
-			voter_profile.save()
+        #charge the people who disagree
+        votersDisagree = Vote.objects.filter(vote_message=vote_message,vote=False)
+        for voter in votersDisagree:
+            voter_profile = UserProfile.objects.filter(user=voter)[0]
+            voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostDisagree
+            voter_profile.save()
         vote_message.delete()
     
     #raise ValidationError("not built yet. rawr.")
