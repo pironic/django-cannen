@@ -154,6 +154,7 @@ def poll(request, action, songid=None):
             vote_message = VoteMessage(owner=request.user, action=action,globalSong=globalSong)
         
         vote_message.save()
+        Vote(voter=request.user, vote_message=vote_message, user_vote.vote = 't').save()
     #else:
         
     return HttpResponseRedirect(reverse('cannen.views.index'))
