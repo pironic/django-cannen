@@ -55,7 +55,7 @@ class PlaylistManager(object):
                     #check it's rating, if <0 ... find another one.
                     try:
                         randomSongScore = SongFileScore.objects.filter(url=randomSong.url)[0]
-                        if (randomSongScore.Score >= 0):
+                        if (randomSongScore.score >= 0):
                             songFound = 1 # found one with a rating above 0. awesome, exit the loop!
                     except IndexError:
                         songFound = 1 #doesnt have a rating, and that's good enough for me! queue it up.

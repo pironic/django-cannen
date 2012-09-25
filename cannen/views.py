@@ -138,11 +138,10 @@ def info(request):
             ): #that's fine, any user can skip their own music... 
             skip = True
         else:
-            if (songScore > -2):
-                if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
-                    skip = True
-                else:
-                    skip = False
+            if (songScore <= -2):
+                skip = True
+            else:
+                skip = False
         
         data = dict(request=request, current=now_playing, playlist=playlist, queue=userqueue, rateSelf=rateSelf, songScore=songScore, library=userlibrary, enable_library=enable_library, polls=pollData, leaderboard=leaderboard, skip=skip)
     else: #return the default values without library
@@ -400,27 +399,27 @@ def poll(request, action, id=None, adminAction=None):
                 (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) 
                     and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0))
             ): #that's fine, any user can skip their own music... for free
-            vote_message.CoinCostOwner = 0
-            vote_message.CoinCostAgree = 0
-            vote_message.CoinCostDisagree = 0
+            vote_message.coinCostOwner = 0
+            vote_message.coinCostAgree = 0
+            vote_message.coinCostDisagree = 0
         else:
             songScore = 0
             try: #check for rating, if its not <-2 then dont allow skipping
                 songScore = SongFileScore.objects.filter(url=globalSong.url)[0].score
             except IndexError: #not rated, that's fine...
                 pass
-            if (songScore > -2):
+            if (songScore <= -2):
                 if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
                     pass #if its queued by the AutoShuffle user, then always allow it to be skipped.
                 else:
                     raise ValidationError("Sorry, we can't skip a song that hasnt been played, or has a score of -1 or higher.")
             
             if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
-                vote_message.CoinCostOwner = 0
-                vote_message.CoinCostAgree = 0
-                vote_message.CoinCostDisagree = 0
+                vote_message.coinCostOwner = 0
+                vote_message.coinCostAgree = 0
+                vote_message.coinCostDisagree = 0
             else:
-                vote_message.CoinCostOwner = 2
+                vote_message.coinCostOwner = 2
 
         vote_message.save()
     #else:
