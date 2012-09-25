@@ -370,6 +370,9 @@ def rate(request, action, songid):
 
 def poll(request, action, id=None, adminAction=None):
    
+    voter_profile = UserProfile.objects.filter(user=request.user)[0]
+    voter_leaves_avail = voter_profile.coinsEarned - voter_profile.coinsSpent
+
     if id and adminAction and action == 'admin':
         try: #existing poll?
             vote_message = VoteMessage.objects.filter(owner=request.user, id=id)[0]
@@ -409,10 +412,9 @@ def poll(request, action, id=None, adminAction=None):
             except IndexError: #not rated, that's fine...
                 pass
             if (songScore <= -2):
-                if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
-                    pass #if its queued by the AutoShuffle user, then always allow it to be skipped.
-                else:
-                    raise ValidationError("Sorry, we can't skip a song that hasnt been played, or has a score of -1 or higher.")
+                pass #seems this song is shitty, so allow it to be skipped.
+            else:
+                raise ValidationError("Sorry, we can't skip a song that hasnt been played, or has a score of -1 or higher.")
             
             if (getattr(settings, 'CANNEN_SHUFFLE_ENABLE', False) and globalSong.submitter.id == getattr(settings, 'CANNEN_SHUFFLE_USER_ID', 0)):
                 vote_message.coinCostOwner = 0
@@ -421,7 +423,10 @@ def poll(request, action, id=None, adminAction=None):
             else:
                 vote_message.coinCostOwner = 2
 
-        vote_message.save()
+        if (voter_leaves_avail >= vote_message.coinCostOwner):
+            vote_message.save()
+        else:
+            raise ValidationError("Sorry, You can't afford to make this poll. You need at least %s leaves." % vote_message.coinCostOwner)
     #else:
         
     return HttpResponseRedirect(reverse('cannen.views.index'))
@@ -429,6 +434,9 @@ def poll(request, action, id=None, adminAction=None):
 
 @login_required
 def vote(request, action, pollid):
+    voter_profile = UserProfile.objects.filter(user=request.user)[0]
+    voter_leaves_avail = voter_profile.coinsEarned - voter_profile.coinsSpent
+
     try: #get the poll from the id
         vote_message = VoteMessage.objects.get(id=pollid)
     except:
@@ -448,7 +456,10 @@ def vote(request, action, pollid):
             'f' : lambda: False
         }[action]()
     
-    user_vote.save()
+    if (voter_leaves_avail >= vote_message.coinCostOwner):
+        user_vote.save()
+    else:
+        raise ValidationError("Sorry, You can't afford to vote on this poll. You need at least %s leaves." % vote_message.coinCostOwner)
         
     if cache.get('listeners'):      
         requiredVotes = int(round(int(cache.get('listeners')) * 0.90,0))
@@ -464,8 +475,6 @@ def vote(request, action, pollid):
             if not vote_message.globalSong:
                 raise ValidationError("Invalid song speicfied to skip.")
             else: #its a valid song, lets skip it.
-                backend = cannen.backend.get()
-                backend.stop()
                 #charge the people's for the poll
 
 				#charge the owner, for starting it.
@@ -478,6 +487,10 @@ def vote(request, action, pollid):
                     voter_profile = UserProfile.objects.filter(user=voter)[0]
                     voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostAgree
                     voter_profile.save()
+                    
+                # everyone is charged, so lets skip it now.
+                backend = cannen.backend.get()
+                backend.stop()
         else:
             raise ValidationError("Poll complete but no method built for this action<br/>votesFor: "+str(votesFor)+"<br/>votesAgainst:"+str(totalVotes-votesFor)+"<br/>")
     elif totalVotes >= requiredVotes: #failure on the poll. remove it.
