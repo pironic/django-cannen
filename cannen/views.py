@@ -484,7 +484,7 @@ def vote(request, action, pollid):
 				#charge the people who agree
                 votersAgree = Vote.objects.filter(vote_message=vote_message,vote=True)
                 for voter in votersAgree:
-                    voter_profile = UserProfile.objects.filter(user=voter)[0]
+                    voter_profile = UserProfile.objects.get(user=voter.voter)
                     voter_profile.coinsSpent = voter_profile.coinsSpent + vote_message.coinCostAgree
                     voter_profile.save()
                     
